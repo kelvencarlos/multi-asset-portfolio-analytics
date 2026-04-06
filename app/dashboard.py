@@ -19,7 +19,12 @@ from core.scenarios import stress_test
 
 
 def load_local_css(css_file: Path):
-    st.markdown(f"<style>{css_file.read_text(encoding='utf-8')}</style>", unsafe_allow_html=True)
+    import hashlib
+    css_content = css_file.read_text(encoding='utf-8')
+    css_hash = hashlib.md5(css_content.encode()).hexdigest()[:8]
+    st.markdown(f"<style>{css_content}</style>", unsafe_allow_html=True)
+    # Força invalidação de cache do navegador
+    st.markdown(f"<!-- CSS Version: {css_hash} -->", unsafe_allow_html=True)
 
 
 
@@ -203,7 +208,7 @@ if not selected_assets:
     st.warning("Selecione ao menos um ativo para compor a carteira analisada.")
     st.stop()
 
-st.sidebar.markdown("<div class='sidebar-section-title'>Alocação Estratégica</div>", unsafe_allow_html=True)
+st.sidebar.markdown("<div style='font-size: 0.68rem; font-weight: 700; color: rgba(11, 31, 58, 0.60); margin: 0.06rem 0 0.16rem 0;'>Pesos da<br>Carteira</div>", unsafe_allow_html=True)
 
 
 def _slider_default(symbol: str, fallback: int = 0) -> int:
