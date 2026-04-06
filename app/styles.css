@@ -140,7 +140,7 @@ section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {
     height: calc(var(--app-height) - 0.5rem);
     overflow: hidden;
     padding-top: 0;
-    padding-bottom: 0.12rem;
+    padding-bottom: 0;
 }
 
 section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"]>div,
@@ -155,10 +155,18 @@ main[data-testid="stMain"] {
 }
 
 main[data-testid="stMain"] .block-container {
-    height: calc(var(--app-height) - 0.1rem);
-    overflow: hidden;
+    height: calc(var(--app-height) - 0.02rem);
+    overflow: hidden !important;
     padding-top: 0;
     padding-bottom: 0;
+}
+
+[data-testid="stMainBlockContainer"] {
+    height: calc(var(--app-height) - 0.02rem) !important;
+    overflow: hidden !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    margin-top: 0 !important;
 }
 
 main[data-testid="stMain"] [data-testid="stMainBlockContainer"],
@@ -167,7 +175,9 @@ main[data-testid="stMain"] [data-testid="stMainBlockContainer"]>div>div,
 main[data-testid="stMain"] .block-container>div,
 main[data-testid="stMain"] .block-container>div>div {
     padding-top: 0 !important;
+    padding-bottom: 0 !important;
     margin-top: 0 !important;
+    margin-bottom: 0 !important;
 }
 
 main[data-testid="stMain"] h1,
@@ -195,6 +205,11 @@ main[data-testid="stMain"] .block-container>div {
 
 main[data-testid="stMain"] .element-container {
     margin-bottom: 0 !important;
+}
+
+main[data-testid="stMain"] [data-testid="column"] {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
 }
 
 main[data-testid="stMain"] .stChart,

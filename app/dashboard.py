@@ -165,14 +165,14 @@ with chart_col1:
         f"<div class='chart-title'>1) Evolucao do patrimonio (base 100): nivel atual {indexed_nav.iloc[-1]:.1f}, carteira {narrative_status}</div>",
         unsafe_allow_html=True,
     )
-    st.line_chart(indexed_nav, height=220, width="stretch")
+    st.line_chart(indexed_nav, height=195, width="stretch")
 
 with chart_col2:
     st.markdown(
         f"<div class='chart-title'>2) Profundidade de queda: drawdown maximo de {max_dd:.2%}</div>",
         unsafe_allow_html=True,
     )
-    st.area_chart(dd, height=220, width="stretch")
+    st.area_chart(dd, height=195, width="stretch")
 
 with chart_col3:
     st.markdown("<div class='chart-title'>3) Distribuicao de risco por ativo (ordenada por relevancia)</div>", unsafe_allow_html=True)
@@ -187,6 +187,6 @@ with chart_col3:
                 alt.Tooltip("Contribuicao:Q", title="Contribuicao", format=".2%"),
             ],
         )
-        .properties(height=220)
+        .properties(height=195)
     )
     st.altair_chart(rc_chart, width="stretch")
