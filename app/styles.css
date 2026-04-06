@@ -1,5 +1,7 @@
 :root {
     --app-height: 100dvh;
+    --top-gutter: 0;
+    --side-gutter: 0.5rem;
 }
 
 @supports not (height: 100dvh) {
@@ -35,6 +37,12 @@ section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {
     padding-bottom: 0.25rem;
 }
 
+section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"]>div,
+section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"]>div>div {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
 main[data-testid="stMain"] {
     height: var(--app-height);
     overflow: hidden;
@@ -47,8 +55,21 @@ main[data-testid="stMain"] .block-container {
     padding-bottom: 0.5rem;
 }
 
+main[data-testid="stMain"] .block-container>div,
+main[data-testid="stMain"] .block-container>div>div {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
 main[data-testid="stMain"] h1,
 main[data-testid="stMain"] h2,
 main[data-testid="stMain"] h3 {
     margin-top: 0;
+    margin-bottom: 0.25rem;
+}
+
+section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"]>div,
+main[data-testid="stMain"] .block-container>div {
+    padding-left: var(--side-gutter);
+    padding-right: var(--side-gutter);
 }
