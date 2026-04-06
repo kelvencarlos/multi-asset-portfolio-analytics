@@ -11,6 +11,9 @@ def risk_contribution(returns, weights):
     cov = returns.cov()
     portfolio_vol = np.sqrt(weights.T @ cov @ weights)
 
+    if not np.isfinite(portfolio_vol) or portfolio_vol <= 0:
+        return np.zeros_like(weights, dtype=float)
+
     contrib = (weights * (cov @ weights)) / portfolio_vol
 
-    return contrib
+    return np.nan_to_num(contrib, nan=0.0, posinf=0.0, neginf=0.0)

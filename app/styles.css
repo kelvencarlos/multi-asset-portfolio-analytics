@@ -89,7 +89,17 @@ div[data-testid="stDecoration"] {
     font-size: 0.78rem;
     font-weight: 700;
     color: #0b1f3a;
-    margin-bottom: 0.06rem;
+    margin-bottom: 0.1rem;
+}
+
+.section-title {
+    margin-top: 0.35rem;
+    margin-bottom: 0.12rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(11, 31, 58, 0.76);
 }
 
 .single-insight {
@@ -218,11 +228,11 @@ main[data-testid="stMain"] [data-testid="stChart"] {
 }
 
 main[data-testid="stMain"] .stMetric {
-    border: none;
-    border-radius: 0;
-    background: transparent;
+    border: 1px solid rgba(11, 31, 58, 0.08);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.62);
     padding: 0.36rem 0.48rem;
-    box-shadow: none;
+    box-shadow: 0 4px 14px rgba(11, 31, 58, 0.04);
 }
 
 main[data-testid="stMain"] .stMetric label,
