@@ -37,6 +37,14 @@ div[data-testid="stDecoration"] {
     padding: 0;
 }
 
+.app-subtitle {
+    font-size: 0.85rem;
+    line-height: 1.2;
+    color: rgba(49, 51, 63, 0.78);
+    margin: 0 0 0.25rem 0;
+    padding: 0;
+}
+
 section[data-testid="stSidebar"] {
     height: var(--app-height);
 }
@@ -89,26 +97,34 @@ main[data-testid="stMain"] .block-container>div>div {
     margin-top: 0 !important;
 }
 
-main[data-testid="stMain"] .block-container>div,
-main[data-testid="stMain"] .block-container>div>div {
-    padding-top: 0 !important;
-    margin-top: 0 !important;
-}
-
 main[data-testid="stMain"] h1,
 main[data-testid="stMain"] h2,
 main[data-testid="stMain"] h3,
-.app-title {
+.app-title,
+.app-subtitle {
     margin-top: 0;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.15rem;
 }
 
 main[data-testid="stMain"] .app-title {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+
+main[data-testid="stMain"] .app-subtitle {
+    margin-bottom: 0.15rem;
 }
 
 section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"]>div,
 main[data-testid="stMain"] .block-container>div {
     padding-left: var(--side-gutter);
     padding-right: var(--side-gutter);
+}
+
+main[data-testid="stMain"] .element-container {
+    margin-bottom: 0 !important;
+}
+
+main[data-testid="stMain"] .stChart,
+main[data-testid="stMain"] [data-testid="stChart"] {
+    margin-bottom: 0 !important;
 }

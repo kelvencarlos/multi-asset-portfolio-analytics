@@ -26,6 +26,10 @@ st.markdown(
     "<div class='app-title'>Analise de Portfolio</div>",
     unsafe_allow_html=True,
 )
+st.markdown(
+    "<div class='app-subtitle'>Os filtros modificam os graficos instantaneamente.</div>",
+    unsafe_allow_html=True,
+)
 
 period_options = {
     "6 meses": "6mo",
@@ -119,16 +123,16 @@ rc_total = rc_df["Contribuicao"].sum()
 if rc_total != 0:
     rc_df["Contribuicao"] = rc_df["Contribuicao"] / rc_total
 
-view_mode = st.radio(
-    "Visualizacao",
-    ["Retorno", "Drawdown", "Risco"],
-    horizontal=True,
-    label_visibility="collapsed",
-)
+chart_col1, chart_col2, chart_col3 = st.columns(3)
 
-if view_mode == "Retorno":
-    st.line_chart(cum_ret, height=320, use_container_width=True)
-elif view_mode == "Drawdown":
-    st.line_chart(dd, height=320, use_container_width=True)
-else:
-    st.bar_chart(rc_df.set_index("Ativo"), height=320, use_container_width=True)
+with chart_col1:
+    st.caption("Retorno acumulado")
+    st.line_chart(cum_ret, height=240, width="stretch")
+
+with chart_col2:
+    st.caption("Drawdown")
+    st.line_chart(dd, height=240, width="stretch")
+
+with chart_col3:
+    st.caption("Contribuicao de risco")
+    st.bar_chart(rc_df.set_index("Ativo"), height=240, width="stretch")
