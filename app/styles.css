@@ -16,7 +16,7 @@ html,
 body,
 [data-testid="stAppViewContainer"] {
     height: var(--app-height);
-    overflow: hidden;
+    overflow: auto;
     font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
 }
 
@@ -141,14 +141,15 @@ section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"]>div>div {
 
 section[data-testid="stSidebar"]>div {
     height: var(--app-height);
-    overflow: hidden;
+    overflow: auto;
     background: #f7f9fc;
     border-right: none;
 }
 
 section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {
     height: calc(var(--app-height) - 0.5rem);
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
     padding-top: 0;
     padding-bottom: 0;
 }
@@ -161,19 +162,21 @@ section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"]>div>div {
 
 main[data-testid="stMain"] {
     height: var(--app-height);
-    overflow: hidden;
+    overflow: auto;
 }
 
 main[data-testid="stMain"] .block-container {
     height: calc(var(--app-height) - 0.02rem);
-    overflow: hidden !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
     padding-top: 0;
     padding-bottom: 0;
 }
 
 [data-testid="stMainBlockContainer"] {
     height: calc(var(--app-height) - 0.02rem) !important;
-    overflow: hidden !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
     padding-top: 0 !important;
     padding-bottom: 0 !important;
     margin-top: 0 !important;
