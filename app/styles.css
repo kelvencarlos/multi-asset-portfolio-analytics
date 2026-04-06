@@ -77,7 +77,7 @@ main[data-testid="stMain"] .block-container {
     height: calc(var(--app-height) - 0.5rem);
     overflow: hidden;
     padding-top: 0;
-    padding-bottom: 0.5rem;
+    padding-bottom: 0;
 }
 
 main[data-testid="stMain"] [data-testid="stMainBlockContainer"],
@@ -114,6 +114,7 @@ main[data-testid="stMain"] [data-baseweb="tab-list"] {
 
 main[data-testid="stMain"] [data-baseweb="tab-panel"] {
     padding-top: 0 !important;
+    padding-bottom: 0 !important;
 }
 
 section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"]>div,
