@@ -8,5 +8,6 @@ requests==2.33.1
 six==1.17.0
 tzdata==2026.1
 urllib3==2.6.3
-streamlit==1.49.0
+streamlit==1.55.0
+altair==6.0.0
 yfinance==0.2.65
