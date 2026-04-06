@@ -26,8 +26,8 @@ ASSET_CATALOG: Dict[str, Dict[str, str]] = {
         "category": "Brasil",
     },
     "CDI_PROXY": {
-        "display_name": "CDI sintético (proxy diário)",
-        "selector_label": "CDI sintético (CDI_PROXY)",
+        "display_name": "CDI proxy simplificado (11% a.a.)",
+        "selector_label": "CDI proxy simplificado (CDI_PROXY)",
         "class_name": "Renda Fixa",
         "category": "Brasil",
     },

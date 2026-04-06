@@ -142,11 +142,11 @@ def _build_insights(
 
     if mean_corr <= 0.35:
         messages.append(
-            f"Correlação média entre ativos em {mean_corr:.2f} indica diversificação efetiva entre os vetores de risco."
+            f"Correlação média entre ativos em {mean_corr:.2f} indica boa diversificação entre classes."
         )
     else:
         messages.append(
-            f"Correlação média entre ativos em {mean_corr:.2f} sugere espaço para ampliar diversificação estrutural."
+            f"Correlação média entre ativos em {mean_corr:.2f} sugere espaço para diversificar mais a carteira."
         )
 
     if max_rc_value > 0.35:
@@ -156,17 +156,17 @@ def _build_insights(
 
     if equity_weight > 0.55:
         messages.append(
-            f"Renda variável representa {equity_weight:.2%} da alocação, patamar elevado para mandatos conservadores."
+            f"Renda variável representa {equity_weight:.2%} da alocação, patamar que tende a elevar oscilações."
         )
 
     if fx_weight > 0.10:
         messages.append(
-            f"Exposição cambial direta de {fx_weight:.2%} requer acompanhamento tático de USD/BRL."
+            f"Exposição cambial direta de {fx_weight:.2%} pede monitoramento frequente de USD/BRL."
         )
 
     if stress_impact < -0.08:
         messages.append(
-            f"Teste de estresse sinaliza impacto agregado de {stress_impact:.2%}, acima da tolerância típica de curto prazo."
+            f"Teste de estresse sinaliza impacto agregado de {stress_impact:.2%}, indicando cautela no curto prazo."
         )
 
     return messages[:5] if messages else ["Estrutura de risco sem alertas críticos no período analisado."]
@@ -203,17 +203,22 @@ st.markdown(
         <div>
             <div class='eyebrow'>Plataforma de Monitoramento de Carteiras</div>
             <h1 class='app-title'>Painel de Risco e Performance</h1>
-            <div class='app-subtitle'>Análise institucional de risco, cenários e recomendações para assessoria de investimentos.</div>
+            <div class='app-subtitle'>Leitura de risco e performance com métricas históricas e regras transparentes.</div>
         </div>
-        <div class='topbar-tag'>Comitê de Investimentos</div>
+        <div class='topbar-tag'>Modelo histórico e heurístico</div>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
 st.info(
-    "Cenário considerado: ambiente de juros elevados, incerteza macroeconômica global e necessidade de preservação de capital por meio de diversificação internacional."
+    "Este painel é informativo: usa dados históricos e regras heurísticas para leitura de risco e performance."
 )
+st.caption(
+    "Metodologia: retornos usam preço ajustado quando disponível (fallback para fechamento). "
+    "CDI_PROXY é um proxy simplificado com taxa fixa de 11% a.a., sem replicar o CDI oficial diário."
+)
+st.caption("Na primeira execução, a carga de dados pode levar alguns segundos.")
 
 period_options = {
     "6 meses": "6mo",
@@ -222,7 +227,8 @@ period_options = {
     "5 anos": "5y",
 }
 
-valid_symbols, invalid_symbols = _get_valid_universe(tuple(ordered_asset_symbols()))
+with st.spinner("Validando ativos disponíveis na fonte de dados..."):
+    valid_symbols, invalid_symbols = _get_valid_universe(tuple(ordered_asset_symbols()))
 asset_universe = [symbol for symbol in ordered_asset_symbols() if symbol in valid_symbols]
 
 if invalid_symbols:
@@ -369,7 +375,8 @@ stress_impact = stress_test(weights, stress_vector)
 
 try:
     all_required_assets = tuple(sorted(set(selected_assets) | set(benchmark_assets)))
-    data = _load_close_prices(all_required_assets, period_options[period_label])
+    with st.spinner("Carregando e alinhando séries históricas..."):
+        data = _load_close_prices(all_required_assets, period_options[period_label])
     if data.empty or len(data) < 2:
         raise ValueError("Sem dados suficientes após alinhar as séries dos ativos selecionados.")
 except Exception as exc:
@@ -511,18 +518,18 @@ equity_weight = sum(
 
 if equity_weight > 0.60:
     strategic_suggestion = (
-        "Reduzir a concentração em renda variável e elevar o peso de proteção "
-        "em renda fixa para suavizar a volatilidade esperada."
+        "Considerar reduzir a concentração em renda variável e elevar proteção "
+        "em renda fixa para suavizar a volatilidade histórica."
     )
 elif major_risk_value > 0.35:
     strategic_suggestion = (
-        f"Rebalancear a posição em {_clean_title(major_risk_symbol)} para "
-        "distribuir o risco marginal entre mais vetores da carteira."
+        f"Considerar rebalancear a posição em {_clean_title(major_risk_symbol)} para "
+        "distribuir melhor o risco marginal."
     )
 else:
     strategic_suggestion = (
-        "Manter a alocação atual e reforçar o acompanhamento tático de juros, "
-        "câmbio e correlação entre classes."
+        "Alocação equilibrada para o histórico observado; manter monitoramento "
+        "de juros, câmbio e correlação entre classes."
     )
 
 chart_col1, chart_col2 = st.columns(2)
@@ -549,7 +556,7 @@ with chart_col1:
         )
         .properties(height=210)
     )
-    st.altair_chart(nav_chart, width="stretch")
+    st.altair_chart(nav_chart, use_container_width=True)
 
 with chart_col2:
     st.markdown(
@@ -573,7 +580,7 @@ with chart_col2:
         )
         .properties(height=210)
     )
-    st.altair_chart(dd_chart, width="stretch")
+    st.altair_chart(dd_chart, use_container_width=True)
 
 detail_col1, detail_col2 = st.columns(2)
 
@@ -603,7 +610,7 @@ with detail_col1:
         )
         .properties(height=240)
     )
-    st.altair_chart(rc_chart, width="stretch")
+    st.altair_chart(rc_chart, use_container_width=True)
     if major_risk_value > 0:
         st.markdown(
             (
@@ -633,7 +640,7 @@ with detail_col2:
         )
         .properties(height=240)
     )
-    st.altair_chart(class_chart, width="stretch")
+    st.altair_chart(class_chart, use_container_width=True)
     st.dataframe(
         impact_by_asset[["AtivoLabel", "Classe", "Impacto"]]
         .sort_values("Impacto")
@@ -642,17 +649,18 @@ with detail_col2:
         hide_index=True,
     )
 
-st.markdown("<div class='section-title'>Diagnóstico Técnico Automatizado</div>", unsafe_allow_html=True)
+st.markdown("<div class='section-title'>Diagnóstico por Regras e Histórico</div>", unsafe_allow_html=True)
 for message in insights:
     st.markdown(f"<div class='single-insight'>{message}</div>", unsafe_allow_html=True)
 
-st.markdown("<div class='section-title'>Parecer Estratégico</div>", unsafe_allow_html=True)
+st.markdown("<div class='section-title'>Leitura Estratégica (Informativa)</div>", unsafe_allow_html=True)
 st.markdown(
     (
         f"<div class='single-insight'><strong>Classificação de risco:</strong> {profile}. "
         f"<strong>Fatores principais:</strong> drawdown máximo de {max_dd_a:.2%}, "
         f"correlação média de {mean_corr:.2f} e impacto de estresse de {stress_impact:.2%}. "
-        f"<strong>Recomendação executiva:</strong> {strategic_suggestion}</div>"
+        f"<strong>Leitura sugerida:</strong> {strategic_suggestion} "
+        f"(análise quantitativa simplificada; não é recomendação individual).</div>"
     ),
     unsafe_allow_html=True,
 )
