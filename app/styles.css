@@ -1,7 +1,9 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap");
+
 :root {
     --app-height: 100dvh;
     --top-gutter: 0;
-    --side-gutter: 0.5rem;
+    --side-gutter: 0.45rem;
 }
 
 @supports not (height: 100dvh) {
@@ -15,13 +17,11 @@ body,
 [data-testid="stAppViewContainer"] {
     height: var(--app-height);
     overflow: hidden;
+    font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
 }
 
 body {
-    background:
-        radial-gradient(circle at top left, rgba(18, 90, 191, 0.10), transparent 32%),
-        radial-gradient(circle at bottom right, rgba(20, 184, 166, 0.08), transparent 28%),
-        #f6f8fb;
+    background: #f3f5f8;
 }
 
 header[data-testid="stHeader"] {
@@ -37,124 +37,83 @@ div[data-testid="stDecoration"] {
 }
 
 .app-title {
-    font-size: 1.75rem;
+    font-size: 1.46rem;
     font-weight: 650;
     line-height: 1.1;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.015em;
     margin: 0;
     padding: 0;
+    color: #0b1f3a;
 }
 
 .app-subtitle {
-    font-size: 0.85rem;
+    font-size: 0.76rem;
     line-height: 1.2;
-    color: rgba(49, 51, 63, 0.78);
+    color: rgba(15, 23, 42, 0.66);
     margin: 0;
     padding: 0;
 }
 
-.hero {
+.topbar {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    padding: 0.65rem 0.9rem;
-    margin-bottom: 0.5rem;
-    border: 1px solid rgba(15, 23, 42, 0.08);
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.72);
-    backdrop-filter: blur(10px);
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
-}
-
-.hero-copy {
-    display: flex;
-    flex-direction: column;
-    gap: 0.12rem;
+    padding: 0.2rem 0.25rem;
+    margin-bottom: 0.22rem;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
 }
 
 .eyebrow {
-    font-size: 0.72rem;
+    font-size: 0.66rem;
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: rgba(15, 23, 42, 0.58);
+    color: rgba(11, 31, 58, 0.56);
 }
 
-.hero-chip {
-    align-self: center;
-    padding: 0.4rem 0.7rem;
+.topbar-tag {
+    padding: 0.24rem 0.50rem;
     border-radius: 999px;
-    background: rgba(15, 23, 42, 0.06);
-    color: rgba(15, 23, 42, 0.82);
-    font-size: 0.8rem;
+    background: transparent;
+    color: rgba(11, 31, 58, 0.72);
+    font-size: 0.70rem;
     font-weight: 600;
-    white-space: nowrap;
-}
-
-.section-title {
-    font-size: 0.74rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: rgba(15, 23, 42, 0.55);
-    margin: 0.35rem 0 0.3rem 0;
-}
-
-.insight-card,
-.chart-card {
-    border: 1px solid rgba(15, 23, 42, 0.08);
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.84);
-    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.04);
-}
-
-.insight-card {
-    padding: 0.8rem 0.85rem;
-}
-
-.insight-label {
-    font-size: 0.74rem;
-    color: rgba(15, 23, 42, 0.54);
-    margin-bottom: 0.2rem;
-}
-
-.insight-value {
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: rgba(15, 23, 42, 0.9);
-}
-
-.insight-meta {
-    font-size: 0.82rem;
-    color: rgba(15, 23, 42, 0.64);
-}
-
-.chart-card {
-    padding: 0.4rem 0.65rem 0.2rem 0.65rem;
-    margin-bottom: 0.15rem;
+    border: 1px solid rgba(11, 31, 58, 0.2);
 }
 
 .chart-title {
-    font-size: 0.86rem;
-    font-weight: 650;
-    color: rgba(15, 23, 42, 0.84);
-    margin-bottom: 0.15rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #0b1f3a;
+    margin-bottom: 0.06rem;
+}
+
+.single-insight {
+    margin: 0.10rem 0 0.12rem 0;
+    font-size: 0.76rem;
+    color: rgba(11, 31, 58, 0.74);
+    padding: 0.22rem 0.36rem;
+    border-radius: 8px;
+    background: rgba(11, 31, 58, 0.03);
 }
 
 .sidebar-section-title {
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: rgba(15, 23, 42, 0.55);
-    margin: 0.15rem 0 0.35rem 0;
+    color: rgba(11, 31, 58, 0.60);
+    margin: 0.06rem 0 0.16rem 0;
 }
 
 .sidebar-note {
-    font-size: 0.84rem;
-    color: rgba(15, 23, 42, 0.75);
-    padding: 0.35rem 0;
+    font-size: 0.78rem;
+    color: rgba(11, 31, 58, 0.74);
+    padding: 0.10rem 0;
 }
 
 section[data-testid="stSidebar"] {
@@ -173,13 +132,15 @@ section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"]>div>div {
 section[data-testid="stSidebar"]>div {
     height: var(--app-height);
     overflow: hidden;
+    background: #f7f9fc;
+    border-right: none;
 }
 
 section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {
     height: calc(var(--app-height) - 0.5rem);
     overflow: hidden;
     padding-top: 0;
-    padding-bottom: 0.25rem;
+    padding-bottom: 0.12rem;
 }
 
 section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"]>div,
@@ -194,7 +155,7 @@ main[data-testid="stMain"] {
 }
 
 main[data-testid="stMain"] .block-container {
-    height: calc(var(--app-height) - 0.5rem);
+    height: calc(var(--app-height) - 0.1rem);
     overflow: hidden;
     padding-top: 0;
     padding-bottom: 0;
@@ -215,15 +176,15 @@ main[data-testid="stMain"] h3,
 .app-title,
 .app-subtitle {
     margin-top: 0;
-    margin-bottom: 0.15rem;
+    margin-bottom: 0.08rem;
 }
 
 main[data-testid="stMain"] .app-title {
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.06rem;
 }
 
 main[data-testid="stMain"] .app-subtitle {
-    margin-bottom: 0.15rem;
+    margin-bottom: 0.06rem;
 }
 
 section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"]>div,
@@ -241,14 +202,15 @@ main[data-testid="stMain"] [data-testid="stChart"] {
     margin-bottom: 0 !important;
 }
 
-main[data-testid="stMain"] .element-container:has(.stRadio) {
-    margin-bottom: 0 !important;
+main[data-testid="stMain"] .stMetric {
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    padding: 0.36rem 0.48rem;
+    box-shadow: none;
 }
 
-main[data-testid="stMain"] .stMetric {
-    border: 1px solid rgba(15, 23, 42, 0.08);
-    border-radius: 14px;
-    background: rgba(255, 255, 255, 0.78);
-    padding: 0.6rem 0.7rem;
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.03);
+main[data-testid="stMain"] .stMetric label,
+main[data-testid="stMain"] .stMetric div {
+    color: #0b1f3a;
 }

@@ -4,6 +4,7 @@ from pathlib import Path
 import streamlit as st
 import pandas as pd
 import numpy as np
+import altair as alt
 
 # Garantir imports absolutos mesmo quando o Streamlit e executado de outro diretorio.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -25,13 +26,13 @@ load_local_css(Path(__file__).with_name("styles.css"))
 
 st.markdown(
     """
-    <div class='hero'>
-        <div class='hero-copy'>
-            <div class='eyebrow'>Risk First / Portfolio Intelligence</div>
+    <div class='topbar'>
+        <div>
+            <div class='eyebrow'>Plataforma de Analise</div>
             <h1 class='app-title'>Analise de Portfolio</h1>
-            <div class='app-subtitle'>Os filtros modificam os graficos instantaneamente.</div>
+            <div class='app-subtitle'>Filtros aplicam mudancas instantaneamente nos graficos.</div>
         </div>
-        <div class='hero-chip'>Leitura objetiva, risco em primeiro plano</div>
+        <div class='topbar-tag'>Risk Desk</div>
     </div>
     """,
     unsafe_allow_html=True,
@@ -125,8 +126,6 @@ rc = risk_contribution(returns, weights)
 stress_impact = stress_test(weights, shock_vector)
 last_return = (1 + port_ret.iloc[-1]) - 1 if not port_ret.empty else 0
 
-best_asset = rc_df = None
-
 assets_last_return = pd.Series(dtype=float)
 for symbol in selected_assets:
     assets_last_return.loc[symbol] = data[symbol].pct_change().dropna().iloc[-1] if len(data[symbol].pct_change().dropna()) else 0
@@ -136,54 +135,58 @@ top_asset_value = assets_last_return.max() if not assets_last_return.empty else 
 weak_asset = assets_last_return.idxmin() if not assets_last_return.empty else "N/A"
 weak_asset_value = assets_last_return.min() if not assets_last_return.empty else 0
 
-st.markdown("<div class='section-title'>Resumo executivo</div>", unsafe_allow_html=True)
+max_dd = dd.min() if not dd.empty else 0
+narrative_status = "em recuperacao" if last_return >= 0 else "em perda recente"
+
 summary_col1, summary_col2, summary_col3, summary_col4 = st.columns(4)
 summary_col1.metric("Volatilidade anualizada", f"{volatility(port_ret):.2%}")
 summary_col2.metric("Drawdown maximo", f"{dd.min():.2%}")
 summary_col3.metric("Impacto estresse", f"{stress_impact:.2%}")
 summary_col4.metric("Ultimo retorno", f"{last_return:.2%}")
 
-st.markdown("<div class='section-title'>Leitura rapida</div>", unsafe_allow_html=True)
-insight_col1, insight_col2 = st.columns(2)
-with insight_col1:
-    st.markdown(
-        f"""
-        <div class='insight-card'>
-            <div class='insight-label'>Melhor ativo recente</div>
-            <div class='insight-value'>{top_asset}</div>
-            <div class='insight-meta'>{top_asset_value:.2%}</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-with insight_col2:
-    st.markdown(
-        f"""
-        <div class='insight-card'>
-            <div class='insight-label'>Mais fraco recente</div>
-            <div class='insight-value'>{weak_asset}</div>
-            <div class='insight-meta'>{weak_asset_value:.2%}</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+st.markdown(
+    f"<div class='single-insight'>Melhor ativo recente: <strong>{top_asset} ({top_asset_value:.2%})</strong> | Mais fraco: <strong>{weak_asset} ({weak_asset_value:.2%})</strong></div>",
+    unsafe_allow_html=True,
+)
 
 rc_df = pd.DataFrame({"Ativo": selected_assets, "Contribuicao": rc})
 rc_total = rc_df["Contribuicao"].sum()
 if rc_total != 0:
     rc_df["Contribuicao"] = rc_df["Contribuicao"] / rc_total
 
-st.markdown("<div class='section-title'>Painel de leitura</div>", unsafe_allow_html=True)
+rc_df = rc_df.sort_values("Contribuicao", ascending=False)
+
+indexed_nav = 100 * (cum_ret / cum_ret.iloc[0]) if not cum_ret.empty else cum_ret
+
 chart_col1, chart_col2, chart_col3 = st.columns(3)
 
 with chart_col1:
-    st.markdown("<div class='chart-card'><div class='chart-title'>Retorno acumulado</div></div>", unsafe_allow_html=True)
-    st.line_chart(cum_ret, height=240, width="stretch")
+    st.markdown(
+        f"<div class='chart-title'>1) Patrimonio evoluiu para {indexed_nav.iloc[-1]:.1f} (base 100), carteira {narrative_status}</div>",
+        unsafe_allow_html=True,
+    )
+    st.line_chart(indexed_nav, height=220, width="stretch")
 
 with chart_col2:
-    st.markdown("<div class='chart-card'><div class='chart-title'>Drawdown</div></div>", unsafe_allow_html=True)
-    st.line_chart(dd, height=240, width="stretch")
+    st.markdown(
+        f"<div class='chart-title'>2) Pior queda no periodo foi {max_dd:.2%}</div>",
+        unsafe_allow_html=True,
+    )
+    st.area_chart(dd, height=220, width="stretch")
 
 with chart_col3:
-    st.markdown("<div class='chart-card'><div class='chart-title'>Contribuicao de risco</div></div>", unsafe_allow_html=True)
-    st.bar_chart(rc_df.set_index("Ativo"), height=240, width="stretch")
+    st.markdown("<div class='chart-title'>3) Risco concentrado nos ativos do topo</div>", unsafe_allow_html=True)
+    rc_chart = (
+        alt.Chart(rc_df)
+        .mark_bar(color="#0b1f3a")
+        .encode(
+            x=alt.X("Contribuicao:Q", axis=alt.Axis(format=".0%", title=None)),
+            y=alt.Y("Ativo:N", sort="-x", title=None),
+            tooltip=[
+                alt.Tooltip("Ativo:N", title="Ativo"),
+                alt.Tooltip("Contribuicao:Q", title="Contribuicao", format=".2%"),
+            ],
+        )
+        .properties(height=220)
+    )
+    st.altair_chart(rc_chart, width="stretch")
