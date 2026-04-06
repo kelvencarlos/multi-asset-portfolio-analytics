@@ -119,13 +119,16 @@ rc_total = rc_df["Contribuicao"].sum()
 if rc_total != 0:
     rc_df["Contribuicao"] = rc_df["Contribuicao"] / rc_total
 
-tab_return, tab_drawdown, tab_risk = st.tabs(["Retorno", "Drawdown", "Risco"])
+view_mode = st.radio(
+    "Visualizacao",
+    ["Retorno", "Drawdown", "Risco"],
+    horizontal=True,
+    label_visibility="collapsed",
+)
 
-with tab_return:
-    st.line_chart(cum_ret, height=300, use_container_width=True)
-
-with tab_drawdown:
-    st.line_chart(dd, height=300, use_container_width=True)
-
-with tab_risk:
-    st.bar_chart(rc_df.set_index("Ativo"), height=300, use_container_width=True)
+if view_mode == "Retorno":
+    st.line_chart(cum_ret, height=320, use_container_width=True)
+elif view_mode == "Drawdown":
+    st.line_chart(dd, height=320, use_container_width=True)
+else:
+    st.bar_chart(rc_df.set_index("Ativo"), height=320, use_container_width=True)
