@@ -75,18 +75,39 @@ def get_price_dataframe(symbol: str, period: str = "2y", interval: str = "1d") -
     return df.set_index("date")
 
 
-def validate_tickers(symbols: Iterable[str], period: str = "1mo") -> Tuple[List[str], Dict[str, str]]:
-    valid: List[str] = []
-    invalid: Dict[str, str] = {}
+def get_close_series(symbol: str, period: str = "2y", interval: str = "1d") -> pd.Series:
+    frame = get_price_dataframe(symbol=symbol, period=period, interval=interval)
+    close = pd.to_numeric(frame.get("close"), errors="coerce").dropna()
+    if close.empty:
+        raise ValueError(f"Série de fechamento vazia para {symbol}.")
+    close.name = symbol
+    return close
+
+
+def load_close_series_map(
+    symbols: Iterable[str], period: str = "2y", interval: str = "1d"
+) -> Tuple[Dict[str, pd.Series], Dict[str, str]]:
+    series_by_symbol: Dict[str, pd.Series] = {}
+    failures: Dict[str, str] = {}
 
     for symbol in symbols:
         try:
-            frame = get_price_dataframe(symbol, period=period)
-            if frame.empty:
-                invalid[symbol] = "série vazia"
-            else:
-                valid.append(symbol)
+            series_by_symbol[symbol] = get_close_series(symbol=symbol, period=period, interval=interval)
         except Exception as exc:  # noqa: BLE001
-            invalid[symbol] = str(exc)
+            failures[symbol] = str(exc)
 
+    return series_by_symbol, failures
+
+
+def align_close_series(series_by_symbol: Dict[str, pd.Series]) -> pd.DataFrame:
+    if not series_by_symbol:
+        return pd.DataFrame()
+    frame = pd.concat(series_by_symbol, axis=1).sort_index()
+    frame.columns = list(series_by_symbol.keys())
+    return frame.dropna(how="all").dropna()
+
+
+def validate_tickers(symbols: Iterable[str], period: str = "1mo") -> Tuple[List[str], Dict[str, str]]:
+    series_by_symbol, invalid = load_close_series_map(symbols=symbols, period=period)
+    valid = [symbol for symbol in symbols if symbol in series_by_symbol]
     return valid, invalid

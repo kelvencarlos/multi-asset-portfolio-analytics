@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import altair as alt
 import numpy as np
@@ -12,13 +12,16 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from data.market_data import get_price_dataframe, validate_tickers
+from data.market_data import get_close_series
 from core.portfolio import calculate_returns, portfolio_return, cumulative_return
 from core.risk import volatility, drawdown, risk_contribution
 from core.scenarios import stress_test
 from core.catalog import (
     asset_class,
+    asset_currency,
     asset_display_name,
+    asset_is_proxy,
+    asset_methodology_note,
     asset_selector_label,
     ordered_asset_symbols,
     ordered_stress_classes,
@@ -69,6 +72,9 @@ BENCHMARK_DEFAULT = {
 
 PORTFOLIO_A_LABEL = "Carteira A (Principal)"
 PORTFOLIO_B_LABEL = "Carteira B (Referência)"
+BASE_CURRENCY = "BRL"
+FX_CONVERSION_SYMBOL = "USDBRL=X"
+CACHE_TTL_QUOTES_SECONDS = 300
 
 
 def _clean_title(symbol: str) -> str:
@@ -172,19 +178,102 @@ def _build_insights(
     return messages[:5] if messages else ["Estrutura de risco sem alertas críticos no período analisado."]
 
 
-@st.cache_data(show_spinner=False)
-def _get_valid_universe(symbols):
-    return validate_tickers(symbols, period="1mo")
+def _labels_for_symbols(symbols: List[str]) -> str:
+    return ", ".join(_asset_label(symbol) for symbol in symbols)
 
 
-@st.cache_data(show_spinner=False)
-def _load_close_prices(symbols, period):
-    frame = pd.DataFrame()
+def _weights_from_map(assets: List[str], weights_map: Dict[str, float]) -> np.ndarray:
+    raw = np.array([float(weights_map.get(symbol, 0.0)) for symbol in assets], dtype=float)
+    return _normalize_weights(raw)
+
+
+def _fallback_benchmark_from_available(
+    available_symbols: List[str], selected_symbols: List[str]
+) -> Tuple[List[str], str]:
+    default_candidates = [
+        symbol for symbol in BENCHMARK_DEFAULT if symbol in available_symbols
+    ]
+    if default_candidates:
+        return default_candidates, "Benchmark padrão indisponível. Foi aplicado fallback automático com ativos padrão válidos."
+
+    selected_candidates = [symbol for symbol in selected_symbols if symbol in available_symbols]
+    if selected_candidates:
+        return selected_candidates[: min(2, len(selected_candidates))], (
+            "Benchmark padrão indisponível. Foi aplicado fallback automático com ativos da carteira principal."
+        )
+
+    return [], "Nenhum fallback de benchmark disponível com os ativos carregados."
+
+
+def _resolve_benchmark_assets(
+    benchmark_assets: List[str], available_symbols: List[str], selected_symbols: List[str]
+) -> Tuple[List[str], str]:
+    valid_benchmark_assets = [symbol for symbol in benchmark_assets if symbol in available_symbols]
+    if valid_benchmark_assets:
+        return valid_benchmark_assets, ""
+    return _fallback_benchmark_from_available(
+        available_symbols=available_symbols, selected_symbols=selected_symbols
+    )
+
+
+def _resolve_benchmark_weights(
+    benchmark_assets: List[str],
+    benchmark_weight_map: Dict[str, float],
+    selected_weight_map: Dict[str, float],
+) -> np.ndarray:
+    if not benchmark_assets:
+        return np.array([], dtype=float)
+
+    resolved = _weights_from_map(benchmark_assets, benchmark_weight_map)
+    if resolved.sum() > 0:
+        return resolved
+
+    default_map = {symbol: float(BENCHMARK_DEFAULT.get(symbol, 0.0)) for symbol in benchmark_assets}
+    resolved = _weights_from_map(benchmark_assets, default_map)
+    if resolved.sum() > 0:
+        return resolved
+
+    selected_map = {symbol: float(selected_weight_map.get(symbol, 0.0)) for symbol in benchmark_assets}
+    resolved = _weights_from_map(benchmark_assets, selected_map)
+    if resolved.sum() > 0:
+        return resolved
+
+    return _normalize_weights(np.ones(len(benchmark_assets), dtype=float))
+
+
+def _notes_for_selected_proxies(symbols: List[str]) -> List[str]:
+    notes: List[str] = []
     for symbol in symbols:
-        frame[symbol] = get_price_dataframe(symbol, period=period)["close"]
+        if not asset_is_proxy(symbol):
+            continue
+        note = asset_methodology_note(symbol)
+        if note:
+            notes.append(f"{_clean_title(symbol)}: {note}")
+    return notes
 
-    frame = frame.dropna(how="all")
-    return frame.dropna()
+
+@st.cache_data(show_spinner=False, ttl=CACHE_TTL_QUOTES_SECONDS, max_entries=256)
+def _load_close_series_cached(symbol: str, period: str) -> pd.Series:
+    # Cache por ativo para evitar que falha de um ticker invalide o lote inteiro.
+    return get_close_series(symbol=symbol, period=period)
+
+
+def _load_close_prices(symbols: List[str], period: str) -> Tuple[pd.DataFrame, Dict[str, str]]:
+    series_by_symbol: Dict[str, pd.Series] = {}
+    failed_symbols: Dict[str, str] = {}
+
+    for symbol in symbols:
+        try:
+            series_by_symbol[symbol] = _load_close_series_cached(symbol=symbol, period=period)
+        except Exception as exc:  # noqa: BLE001
+            failed_symbols[symbol] = str(exc)
+
+    if not series_by_symbol:
+        return pd.DataFrame(), failed_symbols
+
+    frame = pd.concat(series_by_symbol, axis=1).sort_index()
+    frame.columns = list(series_by_symbol.keys())
+    return frame.dropna(how="all"), failed_symbols
 
 
 st.set_page_config(page_title="Análise de Portfólio", layout="wide")
@@ -215,10 +304,14 @@ st.info(
     "Este painel é informativo: usa dados históricos e regras heurísticas para leitura de risco e performance."
 )
 st.caption(
-    "Metodologia: retornos usam preço ajustado quando disponível (fallback para fechamento). "
-    "CDI_PROXY é um proxy simplificado com taxa fixa de 11% a.a., sem replicar o CDI oficial diário."
+    f"Base monetária da análise: {BASE_CURRENCY}. Ativos cotados em USD são convertidos para {BASE_CURRENCY} pela série USDBRL=X "
+    "antes do cálculo de retorno de carteira."
 )
-st.caption("Na primeira execução, a carga de dados pode levar alguns segundos.")
+st.caption(
+    "Teste de estresse por classe aplica choque direto de retorno por classe. "
+    "Não representa modelo macroeconômico completo de taxa->preço."
+)
+st.caption("Na primeira execução, a carga pode levar alguns segundos. O app exibe progresso de carregamento.")
 
 period_options = {
     "6 meses": "6mo",
@@ -226,20 +319,7 @@ period_options = {
     "2 anos": "2y",
     "5 anos": "5y",
 }
-
-with st.spinner("Validando ativos disponíveis na fonte de dados..."):
-    valid_symbols, invalid_symbols = _get_valid_universe(tuple(ordered_asset_symbols()))
-asset_universe = [symbol for symbol in ordered_asset_symbols() if symbol in valid_symbols]
-
-if invalid_symbols:
-    invalid_labels = [_asset_label(symbol) for symbol in sorted(invalid_symbols.keys())]
-    st.warning(
-        f"Alguns ativos foram removidos automaticamente por indisponibilidade da fonte de dados: {', '.join(invalid_labels)}"
-    )
-
-if not asset_universe:
-    st.error("Nenhum ativo válido está disponível no momento para análise.")
-    st.stop()
+asset_universe = ordered_asset_symbols()
 
 st.sidebar.markdown("<div class='sidebar-section-title'>Parâmetros</div>", unsafe_allow_html=True)
 st.sidebar.selectbox(
@@ -312,7 +392,9 @@ if not np.isclose(raw_weights.sum(), 100):
     st.sidebar.warning("Os pesos serão normalizados para 100%.")
 
 weights = _normalize_weights(raw_weights)
-weights_by_asset = {selected_assets[idx]: float(weights[idx]) for idx in range(len(selected_assets))}
+input_weights_by_asset = {
+    selected_assets[idx]: float(weights[idx]) for idx in range(len(selected_assets))
+}
 st.sidebar.markdown(
     f"<div class='sidebar-note'>Soma dos pesos (normalizada): <strong>{weights.sum() * 100:.0f}%</strong></div>",
     unsafe_allow_html=True,
@@ -329,8 +411,15 @@ benchmark_assets_selected = st.sidebar.multiselect(
 benchmark_assets = [symbol for symbol in asset_universe if symbol in benchmark_assets_selected]
 
 if not benchmark_assets:
-    st.sidebar.error("Selecione ao menos um ativo para a Carteira B (Benchmark).")
-    st.stop()
+    benchmark_assets, fallback_msg = _fallback_benchmark_from_available(
+        available_symbols=asset_universe,
+        selected_symbols=selected_assets,
+    )
+    if benchmark_assets:
+        st.sidebar.warning(fallback_msg)
+    else:
+        st.sidebar.error("Selecione ao menos um ativo para a Carteira B (Benchmark).")
+        st.stop()
 
 benchmark_raw = []
 for symbol in benchmark_assets:
@@ -348,10 +437,15 @@ for symbol in benchmark_assets:
 
 benchmark_raw = np.array(benchmark_raw, dtype=float)
 if benchmark_raw.sum() <= 0:
-    st.sidebar.error("A Carteira B (Benchmark) deve ter ao menos uma alocação positiva.")
-    st.stop()
+    st.sidebar.warning(
+        "A alocação informada para a Carteira B estava zerada e foi substituída automaticamente."
+    )
+    benchmark_raw = np.ones(len(benchmark_assets), dtype=float)
 
-benchmark_weights = _normalize_weights(benchmark_raw)
+benchmark_weights_input = _normalize_weights(benchmark_raw)
+input_benchmark_weights_by_asset = {
+    benchmark_assets[idx]: float(benchmark_weights_input[idx]) for idx in range(len(benchmark_assets))
+}
 
 st.sidebar.markdown("<div class='sidebar-section-title'>Teste de Estresse por Classe</div>", unsafe_allow_html=True)
 class_shocks = {}
@@ -367,22 +461,148 @@ for class_name in ordered_stress_classes():
         / 100
     )
 
-stress_vector = np.array([
-    class_shocks[asset_class(symbol)] for symbol in selected_assets
-])
-stress_impact = stress_test(weights, stress_vector)
+st.sidebar.caption(
+    "O estresse aplica choques de retorno por classe, não um modelo completo de taxa macroeconômica."
+)
 
+requested_symbols = sorted(set(selected_assets) | set(benchmark_assets))
+usd_assets_requested = [symbol for symbol in requested_symbols if asset_currency(symbol) == "USD"]
+symbols_to_load = list(requested_symbols)
+if usd_assets_requested and FX_CONVERSION_SYMBOL not in symbols_to_load:
+    symbols_to_load.append(FX_CONVERSION_SYMBOL)
 
-try:
-    all_required_assets = tuple(sorted(set(selected_assets) | set(benchmark_assets)))
-    with st.spinner("Carregando e alinhando séries históricas..."):
-        data = _load_close_prices(all_required_assets, period_options[period_label])
-    if data.empty or len(data) < 2:
-        raise ValueError("Sem dados suficientes após alinhar as séries dos ativos selecionados.")
-except Exception as exc:
-    st.error(f"Erro ao carregar os dados de mercado: {exc}")
-    st.info("Verifique conectividade e disponibilidade dos dados na fonte Yahoo Finance.")
+with st.status("Carregando base de mercado...", expanded=False) as status:
+    status.write("Buscando séries históricas dos ativos selecionados.")
+    data_raw, failed_symbols = _load_close_prices(
+        symbols=symbols_to_load,
+        period=period_options[period_label],
+    )
+    status.write("Conferindo consistência dos ativos e preparando normalização monetária.")
+    status.update(label="Carga concluída", state="complete")
+
+if data_raw.empty:
+    st.error("Não foi possível carregar nenhuma série de preços para os ativos escolhidos.")
+    st.info("A fonte pode estar indisponível temporariamente. Tente novamente em alguns minutos.")
     st.stop()
+
+if failed_symbols:
+    failed_labels = _labels_for_symbols(sorted(failed_symbols.keys()))
+    st.warning(
+        "Falha temporária de dados para alguns ativos. Eles foram removidos da análise nesta execução: "
+        f"{failed_labels}"
+    )
+
+loaded_symbols = set(data_raw.columns)
+removed_selected_assets = [symbol for symbol in selected_assets if symbol not in loaded_symbols]
+if removed_selected_assets:
+    st.warning(
+        "Ativos removidos da Carteira A por indisponibilidade de dados: "
+        f"{_labels_for_symbols(removed_selected_assets)}"
+    )
+
+selected_assets = [symbol for symbol in selected_assets if symbol in loaded_symbols]
+if not selected_assets:
+    st.error("A Carteira A ficou sem ativos válidos após o carregamento de dados.")
+    st.stop()
+
+benchmark_assets_before_filter = list(benchmark_assets)
+benchmark_assets, benchmark_resolve_msg = _resolve_benchmark_assets(
+    benchmark_assets=benchmark_assets,
+    available_symbols=[symbol for symbol in asset_universe if symbol in loaded_symbols],
+    selected_symbols=selected_assets,
+)
+
+if benchmark_resolve_msg:
+    st.warning(benchmark_resolve_msg)
+elif any(symbol not in loaded_symbols for symbol in benchmark_assets_before_filter):
+    removed_benchmark = [
+        symbol for symbol in benchmark_assets_before_filter if symbol not in loaded_symbols
+    ]
+    if removed_benchmark:
+        st.warning(
+            "Ativos removidos da Carteira B por indisponibilidade de dados: "
+            f"{_labels_for_symbols(removed_benchmark)}"
+        )
+
+if not benchmark_assets:
+    st.error("A Carteira B ficou sem benchmark viável após o carregamento de dados.")
+    st.stop()
+
+active_portfolio_symbols = sorted(set(selected_assets) | set(benchmark_assets))
+usd_assets_active = [symbol for symbol in active_portfolio_symbols if asset_currency(symbol) == "USD"]
+
+if usd_assets_active and FX_CONVERSION_SYMBOL not in loaded_symbols:
+    st.warning(
+        "Não foi possível converter moeda por indisponibilidade da série USD/BRL. "
+        f"Ativos em USD foram removidos para evitar mistura monetária: {_labels_for_symbols(usd_assets_active)}"
+    )
+    selected_assets = [symbol for symbol in selected_assets if symbol not in usd_assets_active]
+    benchmark_assets = [symbol for symbol in benchmark_assets if symbol not in usd_assets_active]
+    active_portfolio_symbols = sorted(set(selected_assets) | set(benchmark_assets))
+
+if not selected_assets:
+    st.error(
+        "Após aplicar a regra de consistência monetária, não restaram ativos válidos na Carteira A."
+    )
+    st.stop()
+
+if not benchmark_assets:
+    benchmark_assets, benchmark_resolve_msg = _resolve_benchmark_assets(
+        benchmark_assets=[],
+        available_symbols=[symbol for symbol in asset_universe if symbol in loaded_symbols and symbol in selected_assets],
+        selected_symbols=selected_assets,
+    )
+    if benchmark_resolve_msg:
+        st.warning(benchmark_resolve_msg)
+    if not benchmark_assets:
+        st.error("Após ajustes de moeda e disponibilidade, não foi possível definir benchmark viável.")
+        st.stop()
+
+weights = _weights_from_map(selected_assets, input_weights_by_asset)
+if weights.sum() <= 0:
+    st.error("A Carteira A ficou sem alocação válida após remover ativos indisponíveis.")
+    st.stop()
+
+benchmark_weights = _resolve_benchmark_weights(
+    benchmark_assets=benchmark_assets,
+    benchmark_weight_map=input_benchmark_weights_by_asset,
+    selected_weight_map=input_weights_by_asset,
+)
+if benchmark_weights.sum() <= 0:
+    st.error("Não foi possível recalcular os pesos da Carteira B após os ajustes automáticos.")
+    st.stop()
+
+weights_by_asset = {
+    selected_assets[idx]: float(weights[idx]) for idx in range(len(selected_assets))
+}
+
+analysis_columns = sorted(set(selected_assets) | set(benchmark_assets) | {FX_CONVERSION_SYMBOL})
+analysis_columns = [symbol for symbol in analysis_columns if symbol in data_raw.columns]
+data = data_raw[analysis_columns].copy()
+
+converted_assets: List[str] = []
+usd_assets_active = [symbol for symbol in set(selected_assets) | set(benchmark_assets) if asset_currency(symbol) == "USD"]
+if usd_assets_active:
+    fx_series = pd.to_numeric(data[FX_CONVERSION_SYMBOL], errors="coerce")
+    for symbol in usd_assets_active:
+        if symbol in data.columns:
+            data[symbol] = pd.to_numeric(data[symbol], errors="coerce") * fx_series
+            converted_assets.append(symbol)
+
+if converted_assets:
+    st.info(
+        f"Normalização monetária aplicada para base {BASE_CURRENCY} usando USDBRL=X nos ativos em USD: "
+        f"{_labels_for_symbols(sorted(converted_assets))}"
+    )
+
+active_portfolio_symbols = sorted(set(selected_assets) | set(benchmark_assets))
+data = data[[symbol for symbol in active_portfolio_symbols if symbol in data.columns]].dropna()
+if data.empty or len(data) < 2:
+    st.error("Sem dados suficientes após alinhamento das séries e normalização monetária.")
+    st.stop()
+
+stress_vector = np.array([class_shocks[asset_class(symbol)] for symbol in selected_assets])
+stress_impact = stress_test(weights, stress_vector)
 
 returns = calculate_returns(data)
 if returns.empty:
@@ -416,6 +636,25 @@ top_asset = assets_last_return.idxmax() if not assets_last_return.empty else "N/
 top_asset_value = assets_last_return.max() if not assets_last_return.empty else 0
 weak_asset = assets_last_return.idxmin() if not assets_last_return.empty else "N/A"
 weak_asset_value = assets_last_return.min() if not assets_last_return.empty else 0
+
+methodology_notes = _notes_for_selected_proxies(
+    sorted(set(selected_assets) | set(benchmark_assets))
+)
+with st.expander("Transparência metodológica", expanded=False):
+    st.markdown(
+        "- Métricas de risco e performance são calculadas sobre retornos históricos diários; não há modelo preditivo."
+    )
+    st.markdown(
+        "- O teste de estresse aplica choque de retorno por classe sobre os pesos atuais (abordagem heurística)."
+    )
+    if converted_assets:
+        st.markdown(
+            f"- Ativos em USD foram convertidos para {BASE_CURRENCY} usando USDBRL=X antes do cálculo dos retornos de carteira."
+        )
+    if methodology_notes:
+        st.markdown("- Séries tratadas como proxy nesta análise:")
+        for note in methodology_notes:
+            st.markdown(f"- {note}")
 
 summary_col1, summary_col2, summary_col3, summary_col4, summary_col5, summary_col6 = st.columns(6)
 summary_col1.metric("Volatilidade anualizada A", f"{vol_a:.2%}")
@@ -645,7 +884,7 @@ with detail_col2:
         impact_by_asset[["AtivoLabel", "Classe", "Impacto"]]
         .sort_values("Impacto")
         .rename(columns={"AtivoLabel": "Ativo", "Impacto": "Impacto no cenário"}),
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
     )
 
