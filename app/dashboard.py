@@ -29,13 +29,13 @@ def load_local_css(css_file: Path):
 
 
 ASSET_CATALOG = {
-    "BOVA11.SA": {"nome": "BOVA11", "classe": "Brasil equities", "categoria": "Brasil"},
-    "IRFM11.SA": {"nome": "IRFM11", "classe": "Juros", "categoria": "Brasil"},
-    "IMAB11.SA": {"nome": "IMAB11", "classe": "Juros", "categoria": "Brasil"},
-    "CDI_PROXY": {"nome": "CDI (proxy)", "classe": "Juros", "categoria": "Brasil"},
-    "IVVB11.SA": {"nome": "IVVB11", "classe": "EUA equities", "categoria": "Exterior"},
-    "QQQ": {"nome": "NASDAQ (QQQ)", "classe": "EUA equities", "categoria": "Exterior"},
-    "USDBRL=X": {"nome": "Dolar (USD/BRL)", "classe": "Dolar", "categoria": "Exterior"},
+    "BOVA11.SA": {"nome": "BOVA11", "classe": "Ações Brasil", "categoria": "Brasil"},
+    "IRFM11.SA": {"nome": "IRFM11", "classe": "Renda Fixa", "categoria": "Brasil"},
+    "IMAB11.SA": {"nome": "IMAB11", "classe": "Renda Fixa", "categoria": "Brasil"},
+    "CDI_PROXY": {"nome": "CDI (proxy)", "classe": "Renda Fixa", "categoria": "Brasil"},
+    "IVVB11.SA": {"nome": "IVVB11", "classe": "Ações EUA", "categoria": "Exterior"},
+    "QQQ": {"nome": "NASDAQ (QQQ)", "classe": "Ações EUA", "categoria": "Exterior"},
+    "USDBRL=X": {"nome": "Dólar (USD/BRL)", "classe": "Dólar", "categoria": "Exterior"},
     "KNRI11.SA": {"nome": "KNRI11", "classe": "Alternativos", "categoria": "Alternativos"},
     "XFIX11.SA": {"nome": "XFIX11", "classe": "Alternativos", "categoria": "Alternativos"},
     "BTC-USD": {"nome": "Bitcoin", "classe": "Alternativos", "categoria": "Alternativos"},
@@ -111,26 +111,26 @@ def _build_insights(
     equity_weight = sum(
         w
         for symbol, w in weights_by_asset.items()
-        if ASSET_CATALOG.get(symbol, {}).get("classe") in {"Brasil equities", "EUA equities"}
+        if ASSET_CATALOG.get(symbol, {}).get("classe") in {"Ações Brasil", "Ações EUA"}
     )
     dolar_weight = sum(
-        w for symbol, w in weights_by_asset.items() if ASSET_CATALOG.get(symbol, {}).get("classe") == "Dolar"
+        w for symbol, w in weights_by_asset.items() if ASSET_CATALOG.get(symbol, {}).get("classe") == "Dólar"
     )
 
     if equity_weight > 0.55:
-        messages.append("Carteira com concentracao de risco em renda variavel.")
+        messages.append("Carteira apresenta concentração relevante em renda variável.")
     if max_dd < -0.20:
-        messages.append("Drawdown elevado para perfil conservador.")
+        messages.append("Drawdown máximo superior ao esperado para perfil conservador.")
     if mean_corr < 0.35 and equity_weight <= 0.60:
-        messages.append("Boa diversificacao entre classes e geografias.")
+        messages.append("Boa diversificação entre classes de ativos e geografias.")
     if dolar_weight > 0.10:
-        messages.append("Exposicao relevante ao risco cambial.")
+        messages.append("Exposição relevante ao risco de variação cambial.")
     if max_rc_value > 0.35:
         messages.append(
-            f"Apesar da alocacao equilibrada, o risco esta concentrado em {_clean_title(max_rc_symbol)}."
+            f"Estrutura de alocação indica concentração de risco marginal em {_clean_title(max_rc_symbol)}."
         )
     if ann_vol < 0.10 and max_dd > -0.12:
-        messages.append("Perfil de risco historico compativel com mandato defensivo.")
+        messages.append("Perfil de risco histórico alinhado com mandato defensivo.")
 
     return messages[:4] if messages else ["Estrutura de risco sem alertas criticos no periodo analisado."]
 
@@ -159,16 +159,16 @@ st.markdown(
         <div>
             <div class='eyebrow'>Plataforma de Monitoramento de Carteiras</div>
             <h1 class='app-title'>Painel de Risco e Performance</h1>
-            <div class='app-subtitle'>Leitura institucional de risco, cenário e decisão para assessoria de investimentos.</div>
+            <div class='app-subtitle'>Análise institucional de risco, cenários e recomendações para assessoria de investimentos.</div>
         </div>
-        <div class='topbar-tag'>Comite de Investimentos</div>
+        <div class='topbar-tag'>Comitê de Investimentos</div>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
 st.info(
-    "Cenário considerado: juros ainda elevados globalmente, incerteza macro e necessidade de preservação de capital com diversificação internacional."
+    "Cenário considerado: ambiente de juros elevados, incerteza macroeconômica global e necessidade de preservação de capital por meio de diversificação internacional."
 )
 
 period_options = {
@@ -188,10 +188,10 @@ if invalid_symbols:
     )
 
 st.sidebar.markdown("<div class='sidebar-section-title'>Parâmetros</div>", unsafe_allow_html=True)
-st.sidebar.selectbox("Horizonte de análise", list(period_options.keys()), index=2, key="period_label")
+st.sidebar.selectbox("Horizonte de análise", list(period_options.keys()), index=2, key="period_label", help="Período analisado para cálculo de retornos e risco")
 period_label = st.session_state["period_label"]
 
-preset_label = st.sidebar.selectbox("Preset de carteira", list(PRESETS.keys()), index=2)
+preset_label = st.sidebar.selectbox("Predefinição de carteira", list(PRESETS.keys()), index=2)
 preset_weights = {
     symbol: weight for symbol, weight in PRESETS[preset_label].items() if symbol in asset_universe
 }
@@ -208,7 +208,7 @@ if not selected_assets:
     st.warning("Selecione ao menos um ativo para compor a carteira analisada.")
     st.stop()
 
-st.sidebar.markdown("<div style='font-size: 0.68rem; font-weight: 700; color: rgba(11, 31, 58, 0.60); margin: 0.06rem 0 0.16rem 0;'>Pesos da<br>Carteira</div>", unsafe_allow_html=True)
+st.sidebar.markdown("<div style='font-size: 0.68rem; font-weight: 700; color: rgba(11, 31, 58, 0.60); margin: 0.06rem 0 0.16rem 0;'>Pesos da Carteira</div>", unsafe_allow_html=True)
 
 
 def _slider_default(symbol: str, fallback: int = 0) -> int:
@@ -232,19 +232,19 @@ with st.sidebar.container():
             )
         )
 
-if st.sidebar.button("Resetar pesos"):
+if st.sidebar.button("Resetar pesos", help="Restaura os pesos padrão da predefinição selecionada"):
     for symbol in selected_assets:
         st.session_state[f"w_{symbol}"] = _slider_default(symbol, int(100 / len(selected_assets)))
     st.rerun()
 
 raw_weights = np.array(raw_weights, dtype=float)
 if raw_weights.sum() <= 0:
-    st.sidebar.error("Inconsistência: carteira 100% zerada. Ajuste os pesos para prosseguir.")
-    st.error("A carteira não pode ser zerada. Defina ao menos uma alocação positiva.")
+    st.sidebar.error("Erro: carteira sem alocação. Ajuste os pesos para prosseguir.")
+    st.error("A carteira deve ter ao menos uma alocação positiva. Defina os pesos dos ativos.")
     st.stop()
 
 if not np.isclose(raw_weights.sum(), 100):
-    st.sidebar.warning("Os pesos serao normalizados para 100%.")
+    st.sidebar.warning("Os pesos serão normalizados para 100%.")
 
 weights = _normalize_weights(raw_weights)
 weights_by_asset = {selected_assets[idx]: float(weights[idx]) for idx in range(len(selected_assets))}
@@ -263,14 +263,14 @@ benchmark_assets = st.sidebar.multiselect(
 )
 
 if not benchmark_assets:
-    st.sidebar.error("Selecione ao menos um ativo para a Carteira B.")
+    st.sidebar.error("Selecione ao menos um ativo para a Carteira B (Benchmark).")
     st.stop()
 
 benchmark_raw = []
 for symbol in benchmark_assets:
     benchmark_raw.append(
         st.sidebar.slider(
-            f"Benchmark: {_clean_title(symbol)}",
+            f"Referência: {_clean_title(symbol)}",
             min_value=0,
             max_value=100,
             value=int(BENCHMARK_DEFAULT.get(symbol, int(100 / len(benchmark_assets)))),
@@ -281,23 +281,24 @@ for symbol in benchmark_assets:
 
 benchmark_raw = np.array(benchmark_raw, dtype=float)
 if benchmark_raw.sum() <= 0:
-    st.sidebar.error("A Carteira B nao pode ser 100% zerada.")
+    st.sidebar.error("A Carteira B (Benchmark) deve ter ao menos uma alocação positiva.")
     st.stop()
 
 benchmark_weights = _normalize_weights(benchmark_raw)
 
-st.sidebar.markdown("<div class='sidebar-section-title'>Stress Test por Classe</div>", unsafe_allow_html=True)
+st.sidebar.markdown("<div class='sidebar-section-title'>Teste de Estresse por Classe</div>", unsafe_allow_html=True)
 stress_defaults = {
-    "Brasil equities": -30,
-    "EUA equities": -20,
-    "Juros": 5,
-    "Dolar": 15,
+    "Ações Brasil": -30,
+    "Ações EUA": -20,
+    "Renda Fixa": 5,
+    "Dólar": 15,
     "Alternativos": -10,
 }
 class_shocks = {}
-for class_name in ["Brasil equities", "EUA equities", "Juros", "Dolar", "Alternativos"]:
+for class_name in ["Ações Brasil", "Ações EUA", "Renda Fixa", "Dólar", "Alternativos"]:
+    display_name = f"Choque {class_name} (%)" if class_name != "Renda Fixa" else "Choque Juros (%)"
     class_shocks[class_name] = (
-        st.sidebar.slider(f"Choque {class_name} (%)", -60, 40, stress_defaults[class_name], key=f"shock_{class_name}")
+        st.sidebar.slider(display_name, -60, 40, stress_defaults[class_name], key=f"shock_{class_name}")
         / 100
     )
 
@@ -311,9 +312,9 @@ try:
     all_required_assets = tuple(sorted(set(selected_assets) | set(benchmark_assets)))
     data = _load_close_prices(all_required_assets, period_options[period_label])
     if data.empty:
-        raise ValueError("Sem dados apos alinhar as series dos ativos selecionados.")
+        raise ValueError("Sem dados após alinhar as séries dos ativos selecionados.")
 except Exception as exc:
-    st.error(f"Não foi possível carregar os dados de mercado: {exc}")
+    st.error(f"Erro ao carregar os dados de mercado: {exc}")
     st.info("Verifique conectividade e disponibilidade dos dados na fonte Yahoo Finance.")
     st.stop()
 
@@ -353,30 +354,30 @@ narrative_status = "com desempenho positivo recente" if last_return >= 0 else "c
 summary_col1, summary_col2, summary_col3, summary_col4, summary_col5, summary_col6 = st.columns(6)
 summary_col1.metric("Volatilidade A", f"{vol_a:.2%}")
 summary_col2.metric("Volatilidade B", f"{vol_b:.2%}")
-summary_col3.metric("Drawdown maximo A", f"{max_dd_a:.2%}")
-summary_col4.metric("Drawdown maximo B", f"{max_dd_b:.2%}")
+summary_col3.metric("Drawdown máximo A", f"{max_dd_a:.2%}")
+summary_col4.metric("Drawdown máximo B", f"{max_dd_b:.2%}")
 summary_col5.metric("Impacto no cenário atual", f"{stress_impact:.2%}")
 summary_col6.metric("Retorno recente", f"{last_return:.2%}")
 
 st.markdown(
-    f"<div class='single-insight'>Comparacao de retorno acumulado: <strong>Carteira A {acc_return_a:.2%}</strong> vs <strong>Carteira B {acc_return_b:.2%}</strong></div>",
+    f"<div class='single-insight'>Comparação de retorno acumulado: <strong>Carteira A {acc_return_a:.2%}</strong> vs <strong>Carteira B {acc_return_b:.2%}</strong></div>",
     unsafe_allow_html=True,
 )
 
 st.markdown(
-    f"<div class='single-insight'>Maior contribuicao positiva recente: <strong>{_clean_title(top_asset)} ({top_asset_value:.2%})</strong> | Maior pressao negativa recente: <strong>{_clean_title(weak_asset)} ({weak_asset_value:.2%})</strong></div>",
+    f"<div class='single-insight'>Melhor desempenho recente: <strong>{_clean_title(top_asset)} ({top_asset_value:.2%})</strong> | Pior desempenho recente: <strong>{_clean_title(weak_asset)} ({weak_asset_value:.2%})</strong></div>",
     unsafe_allow_html=True,
 )
 
-rc_df = pd.DataFrame({"Ativo": selected_assets, "Contribuicao": rc})
-rc_total = rc_df["Contribuicao"].sum()
+rc_df = pd.DataFrame({"Ativo": selected_assets, "Contribuição": rc})
+rc_total = rc_df["Contribuição"].sum()
 if rc_total != 0:
-    rc_df["Contribuicao"] = rc_df["Contribuicao"] / rc_total
+    rc_df["Contribuição"] = rc_df["Contribuição"] / rc_total
 
-rc_df = rc_df.sort_values("Contribuicao", ascending=False)
+rc_df = rc_df.sort_values("Contribuição", ascending=False)
 rc_df["AtivoLabel"] = rc_df["Ativo"].apply(_clean_title)
 major_risk_symbol = rc_df.iloc[0]["Ativo"] if not rc_df.empty else "N/A"
-major_risk_value = float(rc_df.iloc[0]["Contribuicao"]) if not rc_df.empty else 0.0
+major_risk_value = float(rc_df.iloc[0]["Contribuição"]) if not rc_df.empty else 0.0
 rc_df["Destaque"] = np.where(rc_df["Ativo"] == major_risk_symbol, "Maior risco", "Demais")
 
 indexed_nav_a = 100 * (cum_ret_a / cum_ret_a.iloc[0]) if not cum_ret_a.empty else cum_ret_a
@@ -418,21 +419,21 @@ profile = _portfolio_profile(vol_a, max_dd_a)
 equity_weight = sum(
     weights_by_asset[s]
     for s in selected_assets
-    if ASSET_CATALOG.get(s, {}).get("classe") in {"Brasil equities", "EUA equities"}
+    if ASSET_CATALOG.get(s, {}).get("classe") in {"Ações Brasil", "Ações EUA"}
 )
 
 if equity_weight > 0.60:
-    strategic_suggestion = "A carteira apresenta elevada exposicao a renda variavel. Para perfis mais conservadores, considerar aumento de renda fixa."
+    strategic_suggestion = "Carteira com exposição elevada a renda variável. Para perfis mais conservadores, recomenda-se aumentar a alocação em renda fixa."
 elif major_risk_value > 0.35:
-    strategic_suggestion = f"O risco esta concentrado em {_clean_title(major_risk_symbol)}. Avaliar rebalanceamento para reduzir concentracao marginal."
+    strategic_suggestion = f"O risco está concentrado em {_clean_title(major_risk_symbol)}. Avaliar rebalanceamento para reduzir concentração de risco."
 else:
-    strategic_suggestion = "Estrutura de risco equilibrada para o periodo analisado. Manter monitoramento tatico de juros e risco cambial."
+    strategic_suggestion = "Estrutura de alocação equilibrada para o período. Manter monitoramento tático de curva de juros e variação cambial."
 
 chart_col1, chart_col2 = st.columns(2)
 
 with chart_col1:
     st.markdown(
-        f"<div class='chart-title'>1) Retorno acumulado comparado (base 100): carteira A {narrative_status}</div>",
+        f"<div class='chart-title'>1) Retorno acumulado comparado (base 100)</div>",
         unsafe_allow_html=True,
     )
     nav_chart = (
@@ -450,7 +451,7 @@ with chart_col1:
 
 with chart_col2:
     st.markdown(
-        f"<div class='chart-title'>2) Drawdown comparado: pior queda A {max_dd_a:.2%} vs B {max_dd_b:.2%}</div>",
+        f"<div class='chart-title'>2) Drawdown histórico comparado</div>",
         unsafe_allow_html=True,
     )
     dd_chart = (
@@ -469,29 +470,29 @@ with chart_col2:
 detail_col1, detail_col2 = st.columns(2)
 
 with detail_col1:
-    st.markdown("<div class='chart-title'>3) Contribuicao de risco por ativo (ordenada e com destaque)</div>", unsafe_allow_html=True)
+    st.markdown("<div class='chart-title'>3) Contribuição de risco por ativo</div>", unsafe_allow_html=True)
     rc_chart = (
         alt.Chart(rc_df)
         .mark_bar()
         .encode(
-            x=alt.X("Contribuicao:Q", axis=alt.Axis(format=".0%", title=None)),
+            x=alt.X("Contribuição:Q", axis=alt.Axis(format=".0%", title=None)),
             y=alt.Y("AtivoLabel:N", sort="-x", title=None),
             color=alt.Color("Destaque:N", scale=alt.Scale(domain=["Maior risco", "Demais"], range=["#8b1e1e", "#0b1f3a"]), legend=None),
             tooltip=[
                 alt.Tooltip("AtivoLabel:N", title="Ativo"),
-                alt.Tooltip("Contribuicao:Q", title="Contribuicao", format=".2%"),
+                alt.Tooltip("Contribuição:Q", title="Contribuição (%)", format=".2%"),
             ],
         )
         .properties(height=240)
     )
     st.altair_chart(rc_chart, width="stretch")
     st.markdown(
-        f"<div class='single-insight'>Apesar da alocacao equilibrada, o risco esta concentrado em <strong>{_clean_title(major_risk_symbol)}</strong> ({major_risk_value:.2%}).</div>",
+        f"<div class='single-insight'>A estrutura de risco está concentrada em <strong>{_clean_title(major_risk_symbol)}</strong> ({major_risk_value:.2%}) apesar da alocação distribuída.</div>",
         unsafe_allow_html=True,
     )
 
 with detail_col2:
-    st.markdown("<div class='chart-title'>4) Stress test por classe de risco</div>", unsafe_allow_html=True)
+    st.markdown("<div class='chart-title'>4) Teste de estresse por classe de ativos</div>", unsafe_allow_html=True)
     class_chart = (
         alt.Chart(impact_by_class)
         .mark_bar(color="#3e5c76")
@@ -511,17 +512,17 @@ with detail_col2:
         hide_index=True,
     )
 
-st.markdown("<div class='section-title'>Insights Automáticos</div>", unsafe_allow_html=True)
+st.markdown("<div class='section-title'>Diagnóstico Automático</div>", unsafe_allow_html=True)
 for message in insights:
     st.markdown(f"<div class='single-insight'>{message}</div>", unsafe_allow_html=True)
 
-st.markdown("<div class='section-title'>Leitura Estratégica</div>", unsafe_allow_html=True)
+st.markdown("<div class='section-title'>Parecer Estratégico</div>", unsafe_allow_html=True)
 st.markdown(
     (
-        f"<div class='single-insight'><strong>Perfil da carteira:</strong> {profile}. "
-        f"<strong>Principais riscos:</strong> concentracao marginal em {_clean_title(major_risk_symbol)}, "
-        f"drawdown historico de {max_dd_a:.2%} e correlacao media de {mean_corr:.2f}. "
-        f"<strong>Sugestao:</strong> {strategic_suggestion}</div>"
+        f"<div class='single-insight'><strong>Classificação de risco:</strong> {profile}. "
+        f"<strong>Fatores principais:</strong> concentração de risco em {_clean_title(major_risk_symbol)}, "
+        f"drawdown máximo de {max_dd_a:.2%} e correlação média de {mean_corr:.2f}. "
+        f"<strong>Recomendação:</strong> {strategic_suggestion}</div>"
     ),
     unsafe_allow_html=True,
 )
