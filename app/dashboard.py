@@ -41,6 +41,19 @@ ASSET_CATALOG = {
     "BTC-USD": {"nome": "Bitcoin", "classe": "Alternativos", "categoria": "Alternativos"},
 }
 
+ASSET_LABELS = {
+    "BOVA11.SA": "BOVA11 (BOVA11.SA)",
+    "IVVB11.SA": "IVVB11 (IVVB11.SA)",
+    "IRFM11.SA": "IRFM11 (IRFM11.SA)",
+    "IMAB11.SA": "IMAB11 (IMAB11.SA)",
+    "USDBRL=X": "Dólar (USD/BRL) (USDBRL=X)",
+    "KNRI11.SA": "KNRI11 (KNRI11.SA)",
+    "QQQ": "NASDAQ (QQQ)",
+    "XFIX11.SA": "XFIX11 (XFIX11.SA)",
+    "BTC-USD": "Bitcoin (BTC-USD)",
+    "CDI_PROXY": "CDI (proxy) (CDI_PROXY)",
+}
+
 STRESS_LABELS = {
     "Ações Brasil": "Choque Ações Brasil (%)",
     "Ações EUA": "Choque Ações EUA (%)",
@@ -81,6 +94,11 @@ BENCHMARK_DEFAULT = {
 
 def _clean_title(symbol: str) -> str:
     return ASSET_CATALOG.get(symbol, {}).get("nome", symbol)
+
+
+def _asset_label(symbol: str) -> str:
+    label = str(ASSET_LABELS.get(symbol, symbol)).strip()
+    return label if label else symbol
 
 
 def _normalize_weights(raw_weights: np.ndarray) -> np.ndarray:
@@ -209,7 +227,7 @@ selected_assets = st.sidebar.multiselect(
     "Universo de ativos",
     options=asset_universe,
     default=preset_assets,
-    format_func=lambda x: f"{_clean_title(x)} ({x})",
+    format_func=_asset_label,
 )
 
 if not selected_assets:
@@ -231,7 +249,7 @@ with st.sidebar.container():
         slider_default = _slider_default(symbol, int(100 / len(selected_assets)))
         raw_weights.append(
             st.slider(
-                f"{_clean_title(symbol)} ({symbol})",
+                _asset_label(symbol),
                 min_value=0,
                 max_value=100,
                 value=slider_default,
@@ -267,7 +285,7 @@ benchmark_assets = st.sidebar.multiselect(
     options=asset_universe,
     default=[symbol for symbol in BENCHMARK_DEFAULT.keys() if symbol in asset_universe],
     key="benchmark_assets",
-    format_func=lambda x: f"{_clean_title(x)} ({x})",
+    format_func=_asset_label,
 )
 
 if not benchmark_assets:
@@ -278,7 +296,7 @@ benchmark_raw = []
 for symbol in benchmark_assets:
     benchmark_raw.append(
         st.sidebar.slider(
-            f"Referência: {_clean_title(symbol)}",
+            f"Referência: {_asset_label(symbol)}",
             min_value=0,
             max_value=100,
             value=int(BENCHMARK_DEFAULT.get(symbol, int(100 / len(benchmark_assets)))),
