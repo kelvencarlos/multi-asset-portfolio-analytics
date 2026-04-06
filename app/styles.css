@@ -115,6 +115,17 @@ main[data-testid="stMain"] [data-baseweb="tab-list"] {
 main[data-testid="stMain"] [data-baseweb="tab-panel"] {
     padding-top: 0 !important;
     padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+main[data-testid="stMain"] [data-baseweb="tabs"] {
+    padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+main[data-testid="stMain"] [data-baseweb="tab-panel"]>div {
+    padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
 }
 
 section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"]>div,

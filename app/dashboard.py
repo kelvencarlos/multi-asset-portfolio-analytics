@@ -129,5 +129,3 @@ with tab_drawdown:
 
 with tab_risk:
     st.bar_chart(rc_df.set_index("Ativo"), height=300, use_container_width=True)
-
-st.caption("Os graficos e metricas reagem automaticamente aos filtros da barra lateral.")
