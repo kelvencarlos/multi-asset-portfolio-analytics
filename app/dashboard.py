@@ -41,6 +41,14 @@ ASSET_CATALOG = {
     "BTC-USD": {"nome": "Bitcoin", "classe": "Alternativos", "categoria": "Alternativos"},
 }
 
+STRESS_LABELS = {
+    "Ações Brasil": "Choque Ações Brasil (%)",
+    "Ações EUA": "Choque Ações EUA (%)",
+    "Renda Fixa": "Choque Juros (%)",
+    "Dólar": "Choque Dólar (%)",
+    "Alternativos": "Choque Alternativos (%)",
+}
+
 PRESETS = {
     "Carteira Brasil": {
         "BOVA11.SA": 25,
@@ -253,7 +261,7 @@ st.sidebar.markdown(
     unsafe_allow_html=True,
 )
 
-st.sidebar.markdown("<div class='sidebar-section-title'>Carteira B (Benchmark)</div>", unsafe_allow_html=True)
+st.sidebar.markdown("<div class='sidebar-section-title'>Carteira B (Referência)</div>", unsafe_allow_html=True)
 benchmark_assets = st.sidebar.multiselect(
     "Ativos da Carteira B",
     options=asset_universe,
@@ -296,9 +304,8 @@ stress_defaults = {
 }
 class_shocks = {}
 for class_name in ["Ações Brasil", "Ações EUA", "Renda Fixa", "Dólar", "Alternativos"]:
-    display_name = f"Choque {class_name} (%)" if class_name != "Renda Fixa" else "Choque Juros (%)"
     class_shocks[class_name] = (
-        st.sidebar.slider(display_name, -60, 40, stress_defaults[class_name], key=f"shock_{class_name}")
+        st.sidebar.slider(STRESS_LABELS[class_name], -60, 40, stress_defaults[class_name], key=f"shock_{class_name}")
         / 100
     )
 
@@ -451,7 +458,7 @@ with chart_col1:
 
 with chart_col2:
     st.markdown(
-        f"<div class='chart-title'>2) Drawdown histórico comparado</div>",
+        f"<div class='chart-title'>2) Drawdown comparado</div>",
         unsafe_allow_html=True,
     )
     dd_chart = (
