@@ -141,15 +141,15 @@ section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"]>div>div {
 
 section[data-testid="stSidebar"]>div {
     height: var(--app-height);
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
     background: #f7f9fc;
     border-right: none;
 }
 
 section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {
-    height: calc(var(--app-height) - 0.5rem);
-    overflow-y: auto;
-    overflow-x: hidden;
+    height: auto;
+    overflow: visible;
     padding-top: 0;
     padding-bottom: 0;
 }
