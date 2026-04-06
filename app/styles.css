@@ -107,6 +107,15 @@ main[data-testid="stMain"] .app-title {
     margin-bottom: 0.5rem;
 }
 
+main[data-testid="stMain"] [data-baseweb="tab-list"] {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+main[data-testid="stMain"] [data-baseweb="tab-panel"] {
+    padding-top: 0 !important;
+}
+
 section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"]>div,
 main[data-testid="stMain"] .block-container>div {
     padding-left: var(--side-gutter);
