@@ -22,7 +22,10 @@ def load_local_css(css_file: Path):
 
 st.set_page_config(page_title="Analise de Portfolio", layout="wide")
 load_local_css(Path(__file__).with_name("styles.css"))
-st.title("Analise de Portfolio")
+st.markdown(
+    "<div class='app-title'>Analise de Portfolio</div>",
+    unsafe_allow_html=True,
+)
 
 period_options = {
     "6 meses": "6mo",

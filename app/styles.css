@@ -21,8 +21,33 @@ header[data-testid="stHeader"] {
     display: none;
 }
 
+div[data-testid="stToolbar"] {
+    display: none;
+}
+
+div[data-testid="stDecoration"] {
+    display: none;
+}
+
+.app-title {
+    font-size: 1.6rem;
+    font-weight: 650;
+    line-height: 1.1;
+    margin: 0 0 0.35rem 0;
+    padding: 0;
+}
+
 section[data-testid="stSidebar"] {
     height: var(--app-height);
+}
+
+section[data-testid="stSidebar"] [data-testid="stSidebarContent"],
+section[data-testid="stSidebar"] [data-testid="stSidebarContent"]>div,
+section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"],
+section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"]>div,
+section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"]>div>div {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
 }
 
 section[data-testid="stSidebar"]>div {
@@ -55,6 +80,15 @@ main[data-testid="stMain"] .block-container {
     padding-bottom: 0.5rem;
 }
 
+main[data-testid="stMain"] [data-testid="stMainBlockContainer"],
+main[data-testid="stMain"] [data-testid="stMainBlockContainer"]>div,
+main[data-testid="stMain"] [data-testid="stMainBlockContainer"]>div>div,
+main[data-testid="stMain"] .block-container>div,
+main[data-testid="stMain"] .block-container>div>div {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
 main[data-testid="stMain"] .block-container>div,
 main[data-testid="stMain"] .block-container>div>div {
     padding-top: 0 !important;
@@ -63,9 +97,14 @@ main[data-testid="stMain"] .block-container>div>div {
 
 main[data-testid="stMain"] h1,
 main[data-testid="stMain"] h2,
-main[data-testid="stMain"] h3 {
+main[data-testid="stMain"] h3,
+.app-title {
     margin-top: 0;
     margin-bottom: 0.25rem;
+}
+
+main[data-testid="stMain"] .app-title {
+    margin-bottom: 0.5rem;
 }
 
 section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"]>div,
