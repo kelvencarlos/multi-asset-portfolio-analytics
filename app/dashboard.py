@@ -89,8 +89,9 @@ def _mean_abs_correlation(returns: pd.DataFrame) -> float:
     if returns.shape[1] <= 1:
         return 0.0
     corr = returns.corr().abs()
-    np.fill_diagonal(corr.values, np.nan)
-    return float(np.nanmean(corr.values))
+    corr_array = corr.to_numpy(copy=True)
+    np.fill_diagonal(corr_array, np.nan)
+    return float(np.nanmean(corr_array))
 
 
 def _build_insights(
