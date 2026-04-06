@@ -111,25 +111,22 @@ col1.metric("Volatilidade anualizada", f"{volatility(port_ret):.2%}")
 col2.metric("Drawdown maximo", f"{dd.min():.2%}")
 col3.metric("Impacto estresse", f"{stress_impact:.2%}")
 
-chart_col1, chart_col2 = st.columns(2)
+chart_col1, chart_col2, chart_col3 = st.columns(3)
+rc_df = pd.DataFrame({"Ativo": selected_assets, "Contribuicao": rc})
+rc_total = rc_df["Contribuicao"].sum()
+if rc_total != 0:
+    rc_df["Contribuicao"] = rc_df["Contribuicao"] / rc_total
+
 with chart_col1:
     st.caption("Retorno Acumulado")
-    st.line_chart(cum_ret, height=340, use_container_width=True)
+    st.line_chart(cum_ret, height=260, use_container_width=True)
 
 with chart_col2:
     st.caption("Drawdown")
-    st.line_chart(dd, height=340, use_container_width=True)
+    st.line_chart(dd, height=260, use_container_width=True)
 
-with st.expander("Contribuicao de Risco (detalhes)", expanded=False):
-    rc_df = pd.DataFrame({"Ativo": selected_assets, "Contribuicao": rc})
-    rc_total = rc_df["Contribuicao"].sum()
-    if rc_total != 0:
-        rc_df["Contribuicao"] = rc_df["Contribuicao"] / rc_total
-
-    st.bar_chart(rc_df.set_index("Ativo"))
-    st.dataframe(
-        rc_df.assign(Contribuicao=rc_df["Contribuicao"].map(lambda x: f"{x:.2%}")),
-        use_container_width=True,
-    )
+with chart_col3:
+    st.caption("Contribuicao de Risco")
+    st.bar_chart(rc_df.set_index("Ativo"), height=260, use_container_width=True)
 
 st.caption("Os graficos e metricas reagem automaticamente aos filtros da barra lateral.")
