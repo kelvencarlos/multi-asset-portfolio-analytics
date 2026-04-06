@@ -15,8 +15,14 @@ from core.portfolio import calculate_returns, portfolio_return, cumulative_retur
 from core.risk import volatility, drawdown, risk_contribution
 from core.scenarios import stress_test
 
+
+def load_local_css(css_file: Path):
+    st.markdown(f"<style>{css_file.read_text(encoding='utf-8')}</style>", unsafe_allow_html=True)
+
+
 st.set_page_config(page_title="Analise de Portfolio", layout="wide")
-st.title("Analise de Portfolio - Abordagem Priorizando o Risco")
+load_local_css(Path(__file__).with_name("styles.css"))
+st.title("Analise de Portfolio")
 
 period_options = {
     "6 meses": "6mo",
@@ -45,20 +51,20 @@ if not selected_assets:
     st.warning("Selecione ao menos um ativo na barra lateral.")
     st.stop()
 
-st.sidebar.subheader("Pesos (%)")
-raw_weights = []
-for symbol in selected_assets:
-    slider_default = default_weights.get(symbol, int(100 / len(selected_assets)))
-    raw_weights.append(
-        st.sidebar.slider(
-            f"{symbol}",
-            min_value=0,
-            max_value=100,
-            value=slider_default,
-            step=1,
-            key=f"w_{symbol}",
+with st.sidebar.expander("Pesos (%)", expanded=True):
+    raw_weights = []
+    for symbol in selected_assets:
+        slider_default = default_weights.get(symbol, int(100 / len(selected_assets)))
+        raw_weights.append(
+            st.slider(
+                f"{symbol}",
+                min_value=0,
+                max_value=100,
+                value=slider_default,
+                step=1,
+                key=f"w_{symbol}",
+            )
         )
-    )
 
 raw_weights = np.array(raw_weights, dtype=float)
 if raw_weights.sum() <= 0:
@@ -68,8 +74,9 @@ if raw_weights.sum() <= 0:
 weights = raw_weights / raw_weights.sum()
 st.sidebar.caption(f"Soma normalizada dos pesos: {weights.sum() * 100:.0f}%")
 
-st.sidebar.subheader("Cenario de Estresse")
-global_shock = st.sidebar.slider("Choque global (%)", -50, 20, -15)
+with st.sidebar.expander("Cenario de Estresse", expanded=False):
+    global_shock = st.slider("Choque global (%)", -50, 20, -15)
+
 shock_vector = np.full(len(selected_assets), global_shock / 100)
 
 
@@ -104,22 +111,25 @@ col1.metric("Volatilidade anualizada", f"{volatility(port_ret):.2%}")
 col2.metric("Drawdown maximo", f"{dd.min():.2%}")
 col3.metric("Impacto estresse", f"{stress_impact:.2%}")
 
-st.subheader("Retorno Acumulado")
-st.line_chart(cum_ret)
+chart_col1, chart_col2 = st.columns(2)
+with chart_col1:
+    st.caption("Retorno Acumulado")
+    st.line_chart(cum_ret, height=340, use_container_width=True)
 
-st.subheader("Drawdown")
-st.line_chart(dd)
+with chart_col2:
+    st.caption("Drawdown")
+    st.line_chart(dd, height=340, use_container_width=True)
 
-st.subheader("Contribuicao de Risco")
-rc_df = pd.DataFrame({"Ativo": selected_assets, "Contribuicao": rc})
-rc_total = rc_df["Contribuicao"].sum()
-if rc_total != 0:
-    rc_df["Contribuicao"] = rc_df["Contribuicao"] / rc_total
+with st.expander("Contribuicao de Risco (detalhes)", expanded=False):
+    rc_df = pd.DataFrame({"Ativo": selected_assets, "Contribuicao": rc})
+    rc_total = rc_df["Contribuicao"].sum()
+    if rc_total != 0:
+        rc_df["Contribuicao"] = rc_df["Contribuicao"] / rc_total
 
-st.bar_chart(rc_df.set_index("Ativo"))
-st.dataframe(
-    rc_df.assign(Contribuicao=rc_df["Contribuicao"].map(lambda x: f"{x:.2%}")),
-    use_container_width=True,
-)
+    st.bar_chart(rc_df.set_index("Ativo"))
+    st.dataframe(
+        rc_df.assign(Contribuicao=rc_df["Contribuicao"].map(lambda x: f"{x:.2%}")),
+        use_container_width=True,
+    )
 
 st.caption("Os graficos e metricas reagem automaticamente aos filtros da barra lateral.")

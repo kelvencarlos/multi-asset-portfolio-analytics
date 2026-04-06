@@ -1,0 +1,44 @@
+:root {
+    --app-height: 100dvh;
+}
+
+@supports not (height: 100dvh) {
+    :root {
+        --app-height: 100vh;
+    }
+}
+
+html,
+body,
+[data-testid="stAppViewContainer"] {
+    height: var(--app-height);
+    overflow: hidden;
+}
+
+section[data-testid="stSidebar"] {
+    height: var(--app-height);
+}
+
+section[data-testid="stSidebar"]>div {
+    height: var(--app-height);
+    overflow: hidden;
+}
+
+section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {
+    height: calc(var(--app-height) - 0.5rem);
+    overflow: hidden;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+main[data-testid="stMain"] {
+    height: var(--app-height);
+    overflow: hidden;
+}
+
+main[data-testid="stMain"] .block-container {
+    height: calc(var(--app-height) - 0.5rem);
+    overflow: hidden;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
