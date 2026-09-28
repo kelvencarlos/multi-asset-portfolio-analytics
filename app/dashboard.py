@@ -1,3 +1,4 @@
+import logging
 import sys
 from pathlib import Path
 from typing import Dict, List, Tuple
@@ -313,33 +314,6 @@ if catalog_issues:
         st.write(f"- {issue}")
     st.stop()
 
-st.markdown(
-    """
-    <div class='topbar'>
-        <div>
-            <div class='eyebrow'>Plataforma de Monitoramento de Carteiras</div>
-            <h1 class='app-title'>Painel de Risco e Performance</h1>
-            <div class='app-subtitle'>Leitura de risco e performance com métricas históricas e regras transparentes.</div>
-        </div>
-        <div class='topbar-tag'>Modelo histórico e heurístico</div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
-
-st.info(
-    "Este painel é informativo: usa dados históricos e regras heurísticas para leitura de risco e performance."
-)
-st.caption(
-    f"Base monetária da análise: {BASE_CURRENCY}. Ativos cotados em USD são convertidos para {BASE_CURRENCY} pela série USDBRL=X "
-    "antes do cálculo de retorno de carteira."
-)
-st.caption(
-    "Teste de estresse por classe aplica choque direto de retorno por classe. "
-    "Não representa modelo macroeconômico completo de taxa->preço."
-)
-st.caption("Na primeira execução, a carga pode levar alguns segundos. O app exibe progresso de carregamento.")
-
 period_options = {
     "6 meses": "6mo",
     "1 ano": "1y",
@@ -498,14 +472,10 @@ symbols_to_load = list(requested_symbols)
 if usd_assets_requested and FX_CONVERSION_SYMBOL not in symbols_to_load:
     symbols_to_load.append(FX_CONVERSION_SYMBOL)
 
-with st.status("Carregando base de mercado...", expanded=False) as status:
-    status.write("Buscando séries históricas dos ativos selecionados.")
-    data_raw, failed_symbols = _load_close_prices(
-        symbols=symbols_to_load,
-        period=period_options[period_label],
-    )
-    status.write("Conferindo consistência dos ativos e preparando normalização monetária.")
-    status.update(label="Carga concluída", state="complete")
+data_raw, failed_symbols = _load_close_prices(
+    symbols=symbols_to_load,
+    period=period_options[period_label],
+)
 
 if data_raw.empty:
     st.error("Não foi possível carregar nenhuma série de preços para os ativos escolhidos.")
@@ -514,7 +484,7 @@ if data_raw.empty:
 
 if failed_symbols:
     failed_labels = _labels_for_symbols(sorted(failed_symbols.keys()))
-    st.warning(
+    logging.warning(
         "Falha temporária de dados para alguns ativos. Eles foram removidos da análise nesta execução: "
         f"{failed_labels}"
     )
@@ -522,7 +492,7 @@ if failed_symbols:
 loaded_symbols = set(data_raw.columns)
 removed_selected_assets = [symbol for symbol in selected_assets if symbol not in loaded_symbols]
 if removed_selected_assets:
-    st.warning(
+    logging.warning(
         "Ativos removidos da Carteira A por indisponibilidade de dados: "
         f"{_labels_for_symbols(removed_selected_assets)}"
     )
@@ -540,13 +510,13 @@ benchmark_assets, benchmark_resolve_msg = _resolve_benchmark_assets(
 )
 
 if benchmark_resolve_msg:
-    st.warning(benchmark_resolve_msg)
+    logging.warning(benchmark_resolve_msg)
 elif any(symbol not in loaded_symbols for symbol in benchmark_assets_before_filter):
     removed_benchmark = [
         symbol for symbol in benchmark_assets_before_filter if symbol not in loaded_symbols
     ]
     if removed_benchmark:
-        st.warning(
+        logging.warning(
             "Ativos removidos da Carteira B por indisponibilidade de dados: "
             f"{_labels_for_symbols(removed_benchmark)}"
         )
@@ -559,7 +529,7 @@ active_portfolio_symbols = sorted(set(selected_assets) | set(benchmark_assets))
 usd_assets_active = [symbol for symbol in active_portfolio_symbols if asset_currency(symbol) == "USD"]
 
 if usd_assets_active and FX_CONVERSION_SYMBOL not in loaded_symbols:
-    st.warning(
+    logging.warning(
         "Não foi possível converter moeda por indisponibilidade da série USD/BRL. "
         f"Ativos em USD foram removidos para evitar mistura monetária: {_labels_for_symbols(usd_assets_active)}"
     )
@@ -580,7 +550,7 @@ if not benchmark_assets:
         selected_symbols=selected_assets,
     )
     if benchmark_resolve_msg:
-        st.warning(benchmark_resolve_msg)
+        logging.warning(benchmark_resolve_msg)
     if not benchmark_assets:
         st.error("Após ajustes de moeda e disponibilidade, não foi possível definir benchmark viável.")
         st.stop()
@@ -617,7 +587,7 @@ if usd_assets_active:
             converted_assets.append(symbol)
 
 if converted_assets:
-    st.info(
+    logging.info(
         f"Normalização monetária aplicada para base {BASE_CURRENCY} usando USDBRL=X nos ativos em USD: "
         f"{_labels_for_symbols(sorted(converted_assets))}"
     )
@@ -663,25 +633,6 @@ top_asset = assets_last_return.idxmax() if not assets_last_return.empty else "N/
 top_asset_value = assets_last_return.max() if not assets_last_return.empty else 0
 weak_asset = assets_last_return.idxmin() if not assets_last_return.empty else "N/A"
 weak_asset_value = assets_last_return.min() if not assets_last_return.empty else 0
-
-methodology_notes = _notes_for_selected_proxies(
-    sorted(set(selected_assets) | set(benchmark_assets))
-)
-with st.expander("Transparência metodológica", expanded=False):
-    st.markdown(
-        "- Métricas de risco e performance são calculadas sobre retornos históricos diários; não há modelo preditivo."
-    )
-    st.markdown(
-        "- O teste de estresse aplica choque de retorno por classe sobre os pesos atuais (abordagem heurística)."
-    )
-    if converted_assets:
-        st.markdown(
-            f"- Ativos em USD foram convertidos para {BASE_CURRENCY} usando USDBRL=X antes do cálculo dos retornos de carteira."
-        )
-    if methodology_notes:
-        st.markdown("- Séries tratadas como proxy nesta análise:")
-        for note in methodology_notes:
-            st.markdown(f"- {note}")
 
 summary_col1, summary_col2, summary_col3, summary_col4, summary_col5, summary_col6 = st.columns(6)
 summary_col1.metric("Volatilidade anualizada A", f"{vol_a:.2%}")
