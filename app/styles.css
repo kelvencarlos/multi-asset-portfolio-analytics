@@ -1,201 +1,138 @@
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap");
-
+/* Visual tokens from Figma bphkwCrMU77UmzVcX8vvh0, node 1:2.
+   BTG Pactual Sans is proprietary and was not supplied; use local fallbacks. */
 :root {
-    --top-gutter: 0.22rem;
-    --side-gutter: 0.56rem;
+    --font-ui: "BTG Pactual Sans", "Arial", "Segoe UI", sans-serif;
+    --navy: #05132a;
+    --blue: #10408d;
+    --text: #101828;
+    --muted: #6a7282;
+    --border: rgba(0, 0, 0, 0.16);
+    --surface: #ffffff;
+    --soft: #f7f9fc;
 }
 
-html,
-body,
-[data-testid="stAppViewContainer"] {
-    font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+html, body, [data-testid="stAppViewContainer"],
+[data-testid="stSidebar"], input, textarea, button {
+    font-family: var(--font-ui);
 }
-
-body {
-    background: #f3f5f8;
-    overflow: auto;
+[data-testid="stAppViewContainer"] { background: var(--surface); color: var(--text); }
+/* Keep the native header available so the sidebar can be reopened on mobile. */
+header[data-testid="stHeader"] { background: var(--surface); }
+[data-testid="stDecoration"] { display: none; }
+[data-testid="stMain"] .block-container {
+    max-width: 1440px;
+    padding: 4.5rem 2.5rem 3rem;
 }
-
-header[data-testid="stHeader"] {
-    display: none;
-}
-
-div[data-testid="stToolbar"] {
-    display: none;
-}
-
-div[data-testid="stDecoration"] {
-    display: none;
-}
-
-.app-title {
-    font-size: 1.46rem;
-    font-weight: 650;
-    line-height: 1.1;
-    letter-spacing: -0.015em;
-    margin: 0;
-    padding: 0;
-    color: #0b1f3a;
-}
-
-.app-subtitle {
-    font-size: 0.76rem;
-    line-height: 1.2;
-    color: rgba(15, 23, 42, 0.66);
-    margin: 0;
-    padding: 0;
-}
-
 .topbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
-    padding: 0.2rem 0.25rem;
-    margin-bottom: 0.22rem;
-    border: none;
+    gap: 1.5rem;
+    padding: 2.5rem 2rem;
+    margin-bottom: 1.5rem;
+    background: var(--navy);
+    color: white;
+}
+[data-testid="stMain"] .app-title {
+    font-family: var(--font-ui);
+    font-size: 28px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.96);
+    padding: 0;
+    margin: 0.5rem 0;
+}
+.app-subtitle { font-size: 14px; line-height: 1.5; color: #d3dce9; }
+.eyebrow { font-size: 12px; line-height: 1.5; color: #b1d2ff; }
+.topbar-tag {
+    flex-shrink: 0;
+    padding: 0.375rem 0.75rem;
+    border: 1px solid #b1d2ff;
+    border-radius: 16px;
+    color: #b1d2ff;
+    font-size: 12px;
+}
+.chart-title, .section-title {
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 28px;
+    color: var(--text);
+    overflow-wrap: anywhere;
+}
+.chart-title { margin: 1.5rem 0 0.75rem; }
+.section-title { margin: 2rem 0 1rem; }
+.single-insight {
+    margin: 0.5rem 0;
+    padding: 1rem 1.5rem;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+.single-insight strong { color: var(--blue); font-weight: 600; }
+.sidebar-section-title {
+    margin: 1.5rem 0 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--blue);
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+}
+.sidebar-note { color: var(--muted); font-size: 14px; line-height: 1.5; }
+section[data-testid="stSidebar"] { background: var(--soft); border-right: 1px solid var(--border); }
+section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] { padding: 1.5rem; }
+[data-testid="stWidgetLabel"] p { font-size: 14px; line-height: 20px; }
+[data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] p { color: var(--muted); }
+[data-testid="stMetric"] {
+    height: 100%;
+    padding: 1.25rem;
+    border: 1px solid var(--border);
     border-radius: 0;
-    background: transparent;
+    background: var(--surface);
     box-shadow: none;
 }
-
-.eyebrow {
-    font-size: 0.66rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: rgba(11, 31, 58, 0.56);
+[data-testid="stMetricLabel"] { color: var(--muted); }
+[data-testid="stMetricLabel"] p { white-space: normal; }
+[data-testid="stMetricValue"] { color: var(--blue); font-size: 28px; font-weight: 400; }
+[data-testid="stVegaLiteChart"] {
+    border: 1px solid var(--border);
+    background: var(--surface);
 }
-
-.topbar-tag {
-    padding: 0.24rem 0.50rem;
-    border-radius: 999px;
-    background: transparent;
-    color: rgba(11, 31, 58, 0.72);
-    font-size: 0.70rem;
-    font-weight: 600;
-    border: 1px solid rgba(11, 31, 58, 0.2);
+[data-testid="stExpander"] details { border-radius: 0; border-color: var(--border); }
+[data-baseweb="select"] > div, [data-baseweb="input"] { border-radius: 0; }
+[data-baseweb="tag"] { background: #b1d2ff; color: var(--navy); }
+a { color: var(--blue); }
+button:focus-visible, input:focus-visible, a:focus-visible {
+    outline: 2px solid #287cff;
+    outline-offset: 3px;
 }
-
-.chart-title {
-    font-size: 0.78rem;
-    font-weight: 700;
-    color: #0b1f3a;
-    margin-bottom: 0.1rem;
-    overflow-wrap: anywhere;
+/* Preserve the six metrics and two-chart rows; reflow only when space is limited. */
+@media (min-width: 769px) and (max-width: 1400px) {
+    [data-testid="stHorizontalBlock"]:has([data-testid="stMetric"]) { flex-wrap: wrap; }
+    [data-testid="stHorizontalBlock"]:has([data-testid="stMetric"]) > [data-testid="stColumn"] {
+        flex: 1 1 calc(33.333% - 1rem);
+        min-width: 0;
+    }
 }
-
-.section-title {
-    margin-top: 0.35rem;
-    margin-bottom: 0.12rem;
-    font-size: 0.82rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: rgba(11, 31, 58, 0.76);
-    overflow-wrap: anywhere;
+@media (max-width: 1000px) {
+    [data-testid="stMain"] .block-container { padding-inline: 1.25rem; }
+    .topbar { flex-wrap: wrap; padding: 2rem 1.5rem; }
+    [data-testid="stHorizontalBlock"]:has([data-testid="stVegaLiteChart"]) { flex-wrap: wrap; }
+    [data-testid="stHorizontalBlock"]:has([data-testid="stVegaLiteChart"]) > [data-testid="stColumn"] {
+        flex: 1 1 100%; min-width: 0;
+    }
 }
-
-.single-insight {
-    margin: 0.10rem 0 0.12rem 0;
-    font-size: 0.76rem;
-    color: rgba(11, 31, 58, 0.74);
-    padding: 0.22rem 0.36rem;
-    border-radius: 8px;
-    background: rgba(11, 31, 58, 0.03);
-    overflow-wrap: anywhere;
-}
-
-.sidebar-section-title {
-    font-size: 0.68rem;
-    font-weight: 700;
-    color: rgba(11, 31, 58, 0.60);
-    margin: 0.06rem 0 0.16rem 0;
-    overflow-wrap: anywhere;
-}
-
-
-
-.sidebar-note {
-    font-size: 0.78rem;
-    color: rgba(11, 31, 58, 0.74);
-    padding: 0.10rem 0;
-    overflow-wrap: anywhere;
-}
-
-section[data-testid="stSidebar"] label,
-main[data-testid="stMain"] label {
-    overflow-wrap: anywhere;
-}
-
-section[data-testid="stSidebar"]>div {
-    background: #f7f9fc;
-    border-right: none;
-}
-
-section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {
-    padding-top: 0.18rem;
-    padding-bottom: 0.24rem;
-}
-
-section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"]>div,
-section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"]>div>div {
-    padding-top: 0 !important;
-    margin-top: 0 !important;
-}
-
-main[data-testid="stMain"] .block-container {
-    padding-top: var(--top-gutter);
-    padding-bottom: 0.4rem;
-}
-
-[data-testid="stMainBlockContainer"] {
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding-top: 0 !important;
-}
-
-main[data-testid="stMain"] h1,
-main[data-testid="stMain"] h2,
-main[data-testid="stMain"] h3,
-.app-title,
-.app-subtitle {
-    margin-top: 0;
-    margin-bottom: 0.08rem;
-}
-
-main[data-testid="stMain"] .app-title {
-    margin-bottom: 0.06rem;
-}
-
-main[data-testid="stMain"] .app-subtitle {
-    margin-bottom: 0.06rem;
-}
-
-main[data-testid="stMain"] .block-container>div {
-    padding-left: var(--side-gutter);
-    padding-right: var(--side-gutter);
-}
-
-main[data-testid="stMain"] [data-testid="column"] {
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-}
-
-main[data-testid="stMain"] .stChart,
-main[data-testid="stMain"] [data-testid="stChart"] {
-    margin-bottom: 0 !important;
-}
-
-main[data-testid="stMain"] .stMetric {
-    border: 1px solid rgba(11, 31, 58, 0.08);
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.62);
-    padding: 0.36rem 0.48rem;
-    box-shadow: 0 4px 14px rgba(11, 31, 58, 0.04);
-}
-
-main[data-testid="stMain"] .stMetric label,
-main[data-testid="stMain"] .stMetric div {
-    color: #0b1f3a;
+@media (max-width: 768px) {
+    [data-testid="stMain"] .block-container { padding: 4rem 1rem 2rem; }
+    .topbar { padding: 1.5rem; gap: 1rem; }
+    [data-testid="stMain"] .app-title { font-size: 24px; line-height: 32px; }
+    .topbar-tag { flex-shrink: 1; }
+    .single-insight { padding: 1rem; }
+    [data-testid="stHorizontalBlock"] { flex-wrap: wrap; }
+    [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {
+        flex: 1 1 100%; min-width: 0;
+    }
 }

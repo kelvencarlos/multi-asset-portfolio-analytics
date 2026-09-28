@@ -76,6 +76,33 @@ BASE_CURRENCY = "BRL"
 FX_CONVERSION_SYMBOL = "USDBRL=X"
 CACHE_TTL_QUOTES_SECONDS = 300
 
+# Presentation only: shared styling from the Figma reference (node 1:260).
+CHART_PRIMARY = "#287cff"
+CHART_SECONDARY = "#10408d"
+CHART_NEGATIVE = "#cc3333"
+CHART_FONT = "Inter, Arial, sans-serif"
+
+
+def style_chart(chart):
+    mark_type = chart.mark if isinstance(chart.mark, str) else chart.mark.type
+    horizontal_bars = mark_type == "bar"
+    return (
+        chart.configure(background="#ffffff", font=CHART_FONT)
+        .configure_view(stroke=None)
+        .configure_axis(
+            labelColor="#6b7280", labelFont=CHART_FONT, labelFontSize=12,
+            titleColor="#6b7280", titleFont=CHART_FONT, titleFontWeight="normal",
+            gridColor="#ededed", gridWidth=1, domainColor="#d6d6d6",
+            tickSize=0, labelPadding=10, labelOverlap=True,
+        )
+        .configure_axisX(grid=horizontal_bars)
+        .configure_axisY(domain=False, grid=not horizontal_bars)
+        .configure_legend(
+            title=None, orient="bottom", labelColor="#6b7280",
+            labelFont=CHART_FONT, labelFontSize=12, padding=12,
+        )
+    )
+
 
 def _clean_title(symbol: str) -> str:
     return asset_display_name(symbol)
@@ -780,7 +807,7 @@ with chart_col1:
     )
     nav_chart = (
         alt.Chart(comparison_nav.sort_values("Data"))
-        .mark_line(strokeWidth=2.5)
+        .mark_line(strokeWidth=2)
         .encode(
             x=alt.X("Data:T", title=None),
             y=alt.Y("Indice:Q", title=None),
@@ -788,14 +815,14 @@ with chart_col1:
                 "Carteira:N",
                 scale=alt.Scale(
                     domain=[PORTFOLIO_A_LABEL, PORTFOLIO_B_LABEL],
-                    range=["#0b1f3a", "#7588a1"],
+                    range=[CHART_PRIMARY, CHART_SECONDARY],
                 ),
             ),
             tooltip=[alt.Tooltip("Data:T"), alt.Tooltip("Carteira:N"), alt.Tooltip("Indice:Q", format=".2f")],
         )
         .properties(height=210)
     )
-    st.altair_chart(nav_chart, use_container_width=True)
+    st.altair_chart(style_chart(nav_chart), use_container_width=True, theme=None)
 
 with chart_col2:
     st.markdown(
@@ -812,14 +839,14 @@ with chart_col2:
                 "Carteira:N",
                 scale=alt.Scale(
                     domain=[PORTFOLIO_A_LABEL, PORTFOLIO_B_LABEL],
-                    range=["#991b1b", "#c8a28d"],
+                    range=[CHART_PRIMARY, CHART_SECONDARY],
                 ),
             ),
             tooltip=[alt.Tooltip("Data:T"), alt.Tooltip("Carteira:N"), alt.Tooltip("Drawdown:Q", format=".2%")],
         )
         .properties(height=210)
     )
-    st.altair_chart(dd_chart, use_container_width=True)
+    st.altair_chart(style_chart(dd_chart), use_container_width=True, theme=None)
 
 detail_col1, detail_col2 = st.columns(2)
 
@@ -838,7 +865,7 @@ with detail_col1:
                 "Destaque:N",
                 scale=alt.Scale(
                     domain=["Maior risco", "Demais ativos"],
-                    range=["#8b1e1e", "#0b1f3a"],
+                    range=[CHART_NEGATIVE, CHART_PRIMARY],
                 ),
                 legend=None,
             ),
@@ -849,7 +876,7 @@ with detail_col1:
         )
         .properties(height=240)
     )
-    st.altair_chart(rc_chart, use_container_width=True)
+    st.altair_chart(style_chart(rc_chart), use_container_width=True, theme=None)
     if major_risk_value > 0:
         st.markdown(
             (
@@ -871,7 +898,7 @@ with detail_col2:
     )
     class_chart = (
         alt.Chart(impact_by_class)
-        .mark_bar(color="#3e5c76")
+        .mark_bar(color=CHART_PRIMARY)
         .encode(
             x=alt.X("Impacto:Q", axis=alt.Axis(format=".1%", title=None)),
             y=alt.Y("Classe:N", title=None),
@@ -879,7 +906,7 @@ with detail_col2:
         )
         .properties(height=240)
     )
-    st.altair_chart(class_chart, use_container_width=True)
+    st.altair_chart(style_chart(class_chart), use_container_width=True, theme=None)
     st.dataframe(
         impact_by_asset[["AtivoLabel", "Classe", "Impacto"]]
         .sort_values("Impacto")

@@ -3,5 +3,6 @@ venv/
 __pycache__/
 *.pyc
 .env
-.streamlit/
+.streamlit/*
+!.streamlit/config.toml
 .codex
